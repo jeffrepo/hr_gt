@@ -7,7 +7,7 @@ class res_company(models.Model):
 
     centro_ids = fields.One2many('res.company.centro','company_id',string="Centros")
     # igss empresa
-    numero_patronal = fields.Char('Numero patronal')
+    # numero_patronal = fields.Char('Numero patronal')
     version_mensaje = fields.Char('Version del mensaje')
     tipo_planilla_ids = fields.One2many('res.company.tipo_planilla','company_id',string="Tipo planilla")
     liquidacion_ids = fields.One2many('res.company.liquidacion','company_id',string="Liquidacion")
