@@ -30,7 +30,7 @@ class res_company_centro(models.Model):
     codigo_departamento = fields.Char('Codigo departamento')
     codigo_municipio = fields.Char('Código municipio')
     codigo_actividad_economica = fields.Char('Codigo actividad economica')
-    cuenta_analitica_id = fields.Many2one('account.analytic.account',string='Cuenta analitica',required=True, readonly=True)
+    # cuenta_analitica_id = fields.Many2one('account.analytic.account',string='Cuenta analitica',required=True, readonly=True)
 
 
 
