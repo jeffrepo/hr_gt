@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+        <record id="hr_gt_view_employee_form" model="ir.ui.view">
+            <field name="name">hr_gt.hr.employee.form</field>
+            <field name="model">hr.employee</field>
+            <field name="inherit_id" ref="hr.view_employee_form"/>
+            <field name="arch" type="xml">
+                <notebook position="inside">
+                    <page string="Datos requeridos">
+                        <group string="IGSS E INFORMES">
+                            <field name="tipo_sangre"/>
+                            <field name="id_sistema"/>
+                            <field name="igss"/>
+                            <field name="irtra"/>
+                            <field name="nit"/>
+                            <field name="primer_nombre"/>
+                            <field name="segundo_nombre"/>
+                            <field name="primer_apellido"/>
+                            <field name="segundo_apellido"/>
+                            <field name="apellido_casada"/>
+                            <field name="nacionalidad"/>
+                            <field name="lugar_nacimiento"/>
+                            <field name="tipo_discapacidad"/>
+                            <field name="gender"/>
+                            <field name="marital"/>
+                            <field name="cantidad_hijos"/>
+                            <field name="identification_id"/>
+                            <field name="birthday"/>
+                            <field name="cantidad_hijos"/>
+                            <field name="permit_no"/>
+                            <field name="pais_trabajo"/>
+                            <field name="motivo_retiro_extranjero"/>
+                            <field name="nivel_academico"/>
+                            <field name="titulo_obtenido"/>
+                            <field name="pueblo_pertenencia"/>
+                            <field name="idioma"/>
+                            <field name="temporalidad_contrato"/>
+                            <field name="tipo_contrato"/>
+                            <field name="codigo_ocupacion"/>
+                            <field name="codigo_jornada"/>
+                            <field name="temporalidad_contrato"/>
+                            <field name="temporalidad_contrato"/>
+                            <field name="tipo_planilla_id"/>
+
+                            <field name="centro_trabajo_id"/>
+                            <field name="codigo_ocupacion"/>
+                            <field name="condicion_laboral"/>
+                            <field name="numero_liquidacion"/>
+
+
+                        </group>
+                    </page>
+                </notebook>
+                <field name="bank_account_id" position="after">
+                    <field name="deposito"/>
+                </field>
+            </field>
+        </record>
+
+        <!-- <record id="view_hr_comision_form" model="ir.ui.view">
+            <field name="name">hr.comision.form</field>
+            <field name="model">hr.comision</field>
+            <field name="arch" type="xml">
+                <form string="Comisión">
+                    <group>
+                        <group>
+                            <field name="name"/>
+                            <field name="empleado_id"/>
+                            <field name="mes"/>
+                            <field name="anio"/>
+                        </group>
+                        <group>
+                            <field name="codigo"/>
+                            <field name="total"/>
+                            <field name="fin_mes"/>
+                        </group>
+                    </group>
+                </form>
+            </field>
+        </record>
+
+        <record id="view_hr_comision_tree" model="ir.ui.view">
+            <field name="name">hr.comision.tree</field>
+            <field name="model">hr.comision</field>
+            <field name="arch" type="xml">
+                <tree string="Prestamos">
+                    <field name="name"/>
+                    <field name="empleado_id"/>
+                    <field name="mes"/>
+                    <field name="codigo"/>
+                    <field name="total"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_hr_comision" model="ir.actions.act_window">
+            <field name="name">Comisiones</field>
+            <field name="res_model">hr.comision</field>
+            <field name="view_type">form</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+              </p>
+            </field>
+        </record>
+
+        <menuitem
+            id="hr_menu_comision"
+            name="Comisiones"
+            action="action_hr_comision"
+            parent="hr.menu_hr_root"
+            sequence="20"
+            groups="hr.group_hr_manager"/> -->
+
+    </data>
+</odoo>

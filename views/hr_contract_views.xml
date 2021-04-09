@@ -1,0 +1,48 @@
+<openerp>
+  <data>
+        <record id="hr_gt.hr_contract_view_form" model="ir.ui.view">
+            <field name="name">hr_gt.hr.contract.view.form</field>
+            <field name="model">hr.contract</field>
+	        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
+	        <field name="arch" type="xml">
+                <data>
+                    <group name="salary_and_advantages" position="inside">
+                        <label for="bonificacion_incentivo"/>
+                        <div class="o_row" name="bonificacion_incentivo">
+                            <field name="bonificacion_incentivo" nolabel="1"/>
+                            <span>/ mes</span>
+                        </div>
+                        <label for="hora_extra"/>
+                        <div class="o_row" name="hora_extra">
+                            <field name="hora_extra" nolabel="1"/>
+                        </div>
+                        <label for="jubilado"/>
+                        <div class="o_row" name="jubilado">
+                            <field name="jubilado" nolabel="1"/>
+                        </div>
+                        <label for="isr"/>
+                        <div class="o_row" name="isr">
+                            <field name="isr" nolabel="1"/>
+                        </div>
+                        <label for="salario_total"/>
+                        <div class="o_row" name="salario_total">
+                            <field name="salario_total" nolabel="1"/>
+                        </div>
+                    </group>
+                </data>
+	        </field>
+	    </record>
+
+        <record id="hr_gt_hr_contract_view_tree" model="ir.ui.view">
+            <field name="name">hr_gt.hr.contract.tree</field>
+            <field name="model">hr.contract</field>
+            <field name="inherit_id" ref="hr_contract.hr_contract_view_tree"/>
+            <field name="arch" type="xml">
+                <field name="wage" position="after">
+                    <field name="salario_total"/>
+                </field>
+            </field>
+        </record>
+
+  </data>
+</openerp>
