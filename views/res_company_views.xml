@@ -1,0 +1,64 @@
+<odoo>
+  <data>
+
+        <record id="hr_gt.view_company_form" model="ir.ui.view">
+            <field name="name">hr_gt.res.company.form</field>
+            <field name="model">res.company</field>
+	        <field name="inherit_id" ref="base.view_company_form"/>
+	        <field name="arch" type="xml">
+                <data>
+                    <notebook position="inside">
+                        <page string="Datos requeridos">
+                            <group>
+                                <group>
+                                    <field name="numero_patronal"/>
+                                    <field name="version_mensaje"/>
+                                </group>
+                                <group>
+                                    <label for="centro_ids" string="Centros"/>
+                                    <field name="centro_ids">
+                                        <tree string="Centros" editable="bottom">
+                                            <field name="codigo"/>
+                                            <field name="nombre"/>
+                                            <field name="direccion"/>
+                                            <field name="zona"/>
+                                            <field name="telefono"/>
+                                            <field name="fax"/>
+                                            <field name="nombre_contacto"/>
+                                            <field name="correo_electronico"/>
+                                            <field name="codigo_departamento"/>
+                                            <field name="codigo_municipio"/>
+                                            <field name="codigo_actividad_economica"/>
+                                        </tree>
+                                    </field>
+                                    <label for="tipo_planilla_ids" string="Tipos de planilla"/>
+                                    <field name="tipo_planilla_ids">
+                                        <tree string="Tipos" editable="bottom">
+                                            <field name="identificacion_tipo_planilla"/>
+                                            <field name="nombre_tipo_planilla"/>
+                                            <field name="tipo_afiliados"/>
+                                            <field name="periodo_planilla"/>
+                                            <field name="departamento_republica"/>
+                                            <field name="actividad_economica"/>
+                                            <field name="clase_planilla"/>
+                                        </tree>
+                                    </field>
+                                    <label for="liquidacion_ids" string="Liquidacion"/>
+                                    <field name="liquidacion_ids">
+                                        <tree string="Liquidaciones" editable="bottom">
+                                            <field name="name"/>
+                                            <field name="tipo_planilla_id"/>
+                                            <field name="liquidacion_complementario"/>
+                                            <field name="numero_nota_cargo"/>
+                                        </tree>
+                                    </field>
+                                </group>
+                            </group>
+                        </page>
+                    </notebook>
+                </data>
+	        </field>
+	    </record>
+
+  </data>
+</odoo>

@@ -14,6 +14,7 @@
     'data': [
         'views/hr_views.xml',
         'views/hr_contract_views.xml',
+        'views/res_company_views.xml',
     ],
     'installable': True,
     'auto_install': False,
