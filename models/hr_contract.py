@@ -11,6 +11,8 @@ class Contract(models.Model):
     jubilado = fields.Boolean('Jubilado')
     isr = fields.Float('isr')
     salario_total = fields.Monetary('Salario total', compute='calculo_total')
+    historial_salario_ids = fields.One2many('hr.historial_salario','contrato_id',string='Historial de salario')
+
 
     def calculo_total(self):
         for record in self:

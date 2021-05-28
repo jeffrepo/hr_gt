@@ -29,6 +29,17 @@
                             <field name="salario_total" nolabel="1"/>
                         </div>
                     </group>
+                    <group name="salary_and_advantages" position="after">
+                        <group>
+                            <field name="historial_salario_ids">
+                              <tree string="Hitorial de salario" editable="bottom">
+                                  <field name="fecha"/>
+                                  <field name="salario"/>
+                                  <field name="nomina_id"/>
+                              </tree>
+                            </field>
+                      </group>
+                    </group>
                 </data>
 	        </field>
 	    </record>

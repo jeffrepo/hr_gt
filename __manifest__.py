@@ -13,6 +13,7 @@
     'depends': ['hr','hr_contract','hr_payroll'],
     'data': [
         'views/hr_views.xml',
+        'data/data.xml',
         'views/hr_contract_views.xml',
         'views/res_company_views.xml',
     ],
