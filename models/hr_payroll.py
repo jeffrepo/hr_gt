@@ -117,12 +117,12 @@ class HrPayslip(models.Model):
                 dias_trabajo = int(contracts.date_end.strftime('%d'))
                 res.append({'work_entry_type_id': trabajo_id.id, 'sequence': 10, 'number_of_days': (dias_laborados['days'] + 1 - dias_ausentados_restar) if (dias_laborados['days'] + 1 - dias_ausentados_restar) <= 30 else 30})
             else:
-                if contracts.struct_id.schedule_pay == 'monthly':
+                if contracts.structure_type_id.default_schedule_pay == 'monthly':
                     res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': 30 - dias_ausentados_restar})
-                if contracts.struct_id.schedule_pay == 'bi-monthly':
+                if contracts.structure_type_id.default_schedule_pay == 'bi-monthly':
                     res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': 15 - dias_ausentados_restar})
                 # Cálculo de días para catorcena
-                if contracts.struct_id.schedule_pay == 'bi-weekly':
+                if contracts.structure_type_id.default_schedule_pay == 'bi-weekly':
                     dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(self.date_from), Datetime.from_string(self.date_to), calendar=contracts.resource_calendar_id)
                     res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': (dias_laborados['days']+1 - dias_ausentados_restar)})
 
