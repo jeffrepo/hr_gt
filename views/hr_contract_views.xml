@@ -16,6 +16,10 @@
                         <div class="o_row" name="hora_extra">
                             <field name="hora_extra" nolabel="1"/>
                         </div>
+                        <label for="salario_facturado"/>
+                        <div class="o_row" name="salario_facturado">
+                            <field name="salario_facturado" nolabel="1"/>
+                        </div>
                         <label for="jubilado"/>
                         <div class="o_row" name="jubilado">
                             <field name="jubilado" nolabel="1"/>

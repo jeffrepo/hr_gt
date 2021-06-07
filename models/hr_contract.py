@@ -12,7 +12,7 @@ class Contract(models.Model):
     isr = fields.Float('isr')
     salario_total = fields.Monetary('Salario total', compute='calculo_total')
     historial_salario_ids = fields.One2many('hr.historial_salario','contrato_id',string='Historial de salario')
-
+    salario_facturado = fields.Monetary('Salario facturado', digits=(16,2), track_visibility='onchange')
 
     def calculo_total(self):
         for record in self:
