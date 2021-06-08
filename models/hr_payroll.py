@@ -64,7 +64,24 @@ class HrPayslip(models.Model):
                                     lineas.nomina_ids = [(6, 0, nominas)]
                                     entrada.amount += lineas.valor
 
+            historial_dic = {
+                'fecha': nomina.date_to,
+                'salario': nomina.contract_id.wage,
+                'nomina_id': nomina.id,
+                'contrato_id': nomina.contract_id.id
+
+            }
+            historial_salario_id = self.env['hr.historial_salario'].create(historial_dic)
         res =  super(HrPayslip, self).compute_sheet()
+        return res
+
+    def unlink(self):
+        if self.contract_id:
+            if self.contract_id.historial_salario_ids:
+                for linea in self.contract_id.historial_salario_ids:
+                    if linea.nomina_id.id == self.id:
+                        linea.unlink()
+        res = super(HrPayslip, self).unlink()
         return res
 
     def _obtener_entrada(self,contrato_id):
