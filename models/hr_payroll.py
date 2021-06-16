@@ -9,6 +9,7 @@ import dateutil.parser
 from dateutil.relativedelta import relativedelta
 from dateutil import relativedelta as rdelta
 from odoo.fields import Date, Datetime
+import calendar
 
 class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
@@ -33,6 +34,7 @@ class HrPayslip(models.Model):
             if int(dia_nomina) > 15:
                 nomina.fin_mes = True
 
+            nomina.ultimo_dia_mes = calendar.monthrange(anio_nomina, mes_nomina)[1]
             dias_de_quincena = nomina.employee_id._get_work_days_data(Datetime.from_string(nomina.date_from), Datetime.from_string(nomina.date_to), calendar=nomina.employee_id.resource_calendar_id)
             nomina.dias_nomina = dias_de_quincena['days'] + 1
             for entrada in nomina.input_line_ids:
@@ -142,7 +144,9 @@ class HrPayslip(models.Model):
                 if contracts.structure_type_id.default_schedule_pay == 'monthly':
                     res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': 30 - dias_ausentados_restar})
                 if contracts.structure_type_id.default_schedule_pay == 'bi-monthly':
-                    res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': 15 - dias_ausentados_restar})
+                    dias_de_quincena = self.employee_id._get_work_days_data(Datetime.from_string(self.date_from), Datetime.from_string(self.date_to), calendar=self.employee_id.resource_calendar_id)
+                    dias_de_quincena = dias_de_quincena['days'] + 1
+                    res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': dias_de_quincena - dias_ausentados_restar})
                 # Cálculo de días para catorcena
                 if contracts.structure_type_id.default_schedule_pay == 'bi-weekly':
                     dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(nomina.date_from), Datetime.from_string(nomina.date_to), calendar=contracts.resource_calendar_id)
