@@ -33,7 +33,7 @@ class HrPayslip(models.Model):
             if int(dia_nomina) > 15:
                 nomina.fin_mes = True
 
-            dias_de_quincena = self.employee_id._get_work_days_data(Datetime.from_string(nomina.date_from), Datetime.from_string(nomina.date_to), calendar=nomina.employee_id.resource_calendar_id)
+            dias_de_quincena = nomina.employee_id._get_work_days_data(Datetime.from_string(nomina.date_from), Datetime.from_string(nomina.date_to), calendar=nomina.employee_id.resource_calendar_id)
             nomina.dias_nomina = dias_de_quincena['days'] + 1
             for entrada in nomina.input_line_ids:
                 comisiones = self.env['hr.comision'].search([['empleado_id', '=', nomina.employee_id.id]])
