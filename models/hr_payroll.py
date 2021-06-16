@@ -129,15 +129,13 @@ class HrPayslip(models.Model):
             if len(ausencias_restar)>0:
                 if r['work_entry_type_id'] in ausencias_restar:
                     dias_ausentados_restar += r['number_of_days']
-        logging.warn('REST')
-        logging.warn(dias_ausentados_restar)
         if contracts:
-            if contracts.date_start and self.date_from <= contracts.date_start <= nomina.date_to:
-                dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(contracts.date_start), Datetime.from_string(nomina.date_to), calendar=contracts.resource_calendar_id)
+            if contracts.date_start and self.date_from <= contracts.date_start <= self.date_to:
+                dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(contracts.date_start), Datetime.from_string(self.date_to), calendar=contracts.resource_calendar_id)
                 dia_inicio_contrato = int(contracts.date_start.strftime('%d'))
                 res.append({'work_entry_type_id': trabajo_id.id, 'sequence': 10, 'number_of_days': (dias_laborados['days']+1 - dias_ausentados_restar) if (dias_laborados['days'] - dias_ausentados_restar) <= 30 else 30})
             elif contracts.date_end and self.date_from <= contracts.date_end <= self.date_to:
-                dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(nomina.date_from), Datetime.from_string(contracts.date_end), calendar=contracts.resource_calendar_id)
+                dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(self.date_from), Datetime.from_string(contracts.date_end), calendar=contracts.resource_calendar_id)
                 dias_trabajo = int(contracts.date_end.strftime('%d'))
                 res.append({'work_entry_type_id': trabajo_id.id, 'sequence': 10, 'number_of_days': (dias_laborados['days'] + 1 - dias_ausentados_restar) if (dias_laborados['days'] + 1 - dias_ausentados_restar) <= 30 else 30})
             else:
