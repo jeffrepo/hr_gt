@@ -1,0 +1,160 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+
+        <!-- <report
+            id="action_planilla"
+            string="Planilla"
+            model="hr.payslip.run"
+            report_type="qweb-pdf"
+            file="hr_gt.planilla"
+            name="hr_gt.planilla"
+            menu="False"
+        /> -->
+
+        <!-- <report
+            id="action_recibo_pago"
+            string="Recigo de pago"
+            model="hr.payslip.run"
+            report_type="qweb-pdf"
+            file="hr_gt.recibo_pago"
+            name="hr_gt.recibo_pago"
+            menu="False"
+        />
+ -->
+        <!-- <report
+            id="action_igss"
+            string="IGSS"
+            model="hr.payslip.run"
+            report_type="qweb-pdf"
+            file="hr_gt.igss"
+            name="hr_gt.igss"
+            menu="False"
+        /> -->
+
+
+        <record id="view_hr_gt_planilla_wizard" model="ir.ui.view">
+              <field name="name">Planilla</field>
+              <field name="model">hr_gt.planilla.wizard</field>
+              <field name="arch" type="xml">
+                <form string="Planilla">
+                    <group string="Campos">
+                        <field name="fecha_inicio"/>
+                        <field name="fecha_fin"/>
+                        <!-- <field name="ordenar_secuencia"/> -->
+                        <field name="agrupar_departamento"/>
+                        <field name="agrupar_estructura"/>
+                        <field name="nomina_ids" widget="many2many_tags"/>
+                        <field name="formato_planilla_id"/>
+                    </group>
+                    <group>
+                        <!-- <field name="columna_igss"/>
+                        <field name="agrupar_departamento"/> -->
+                        <field name="name" invisible="1"/>
+                        <field name="archivo" readonly="1" filename="name"/>
+                    </group>
+                    <footer>
+                        <!-- <button name="print_report" string="Print"  type="object" class="btn-primary"/> -->
+                        <button name="generar_excel" string="Reporte excel" type="object" class="oe_highlight"/>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+              </field>
+        </record>
+
+        <!-- <record id="view_hr_gt_igss_wizard" model="ir.ui.view">
+              <field name="name">IGSS</field>
+              <field name="model">hr_gt.igss.wizard</field>
+              <field name="arch" type="xml">
+                <form string="IGSS">
+                    <group string="Campos">
+                        <field name="fecha_inicio"/>
+                        <field name="fecha_fin"/>
+                        <field name="nomina_ids" widget="many2many_tags"/>
+                    </group>
+                    <group>
+
+                        <field name="name" invisible="1"/>
+                        <field name="archivo" readonly="1" filename="name"/>
+                    </group>
+                    <footer>
+                        <button name="generar_excel" string="Reporte excel" type="object" class="oe_highlight"/>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+              </field>
+        </record> -->
+
+        <!-- <record id="view_hr_gt_recibo_pago_wizard" model="ir.ui.view">
+              <field name="name">Recibo</field>
+              <field name="model">hr_gt.recibo_pago.wizard</field>
+              <field name="arch" type="xml">
+                <form string="Recibo de pago">
+                    <group string="Campos">
+                        <field name="fecha_inicio"/>
+                        <field name="fecha_fin"/>
+                        <field name="nomina_ids" widget="many2many_tags"/>
+                        <field name="formato_recibo_pago_id"/>
+                    </group>
+                    <footer>
+                        <button name="print_report" string="Imprimir recibos" type="object" class="oe_highlight"/>
+                        <button string="Cancel" class="btn-default" special="cancel" />
+                    </footer>
+                </form>
+              </field>
+        </record> -->
+
+
+        <act_window id="hr_gt_action_planilla"
+            name="Reporte planilla"
+            target="new"
+            binding_model="hr.payslip.run"
+            res_model="hr_gt.planilla.wizard"
+            view_mode="form"/>
+        />
+
+        <!-- <report
+            id="action_planilla_pdf"
+            string="Planilla PDF"
+            model="hr_gt.planilla.wizard"
+            report_type="qweb-pdf"
+            file="rrhh.planilla_pdf"
+            name="rrhh.planilla_pdf"
+            paperformat ="paperformat_libro_salarios"
+            menu="False"
+        /> -->
+
+
+        <menuitem action="hr_gt_action_planilla" id="menu_planilla" string="Reporte planilla" parent="hr_payroll.menu_hr_payroll_report" sequence="50"/>
+
+
+            <!-- <act_window id="hr_gt_action_planilla"
+                name="Reporte planilla"
+                res_model="hr_gt.planilla.wizard"
+                binding_model="hr.payslip"
+                view_mode="form" target="new"/> -->
+
+            <!-- <act_window id="hr_gt_action_igss"
+                name="Reporte IGSS"
+                res_model="hr_gt.igss.wizard"
+                src_model="hr.payslip"
+                view_mode="form" target="new"/>
+
+            <act_window id="hr_gt_action_recibo_pago"
+                name="Recibo de pago"
+                res_model="hr_gt.recibo_pago.wizard"
+                src_model="hr.payslip"
+                view_mode="form" target="new"/> -->
+
+            <!-- <menuitem action="hr_gt_action_planilla" id="menu_planilla" parent="hr_payroll.menu_hr_payroll_root"/> -->
+            <!-- <menuitem action="hr_gt_action_igss" id="menu_igss" parent="hr_payroll.menu_hr_payroll_root"/> -->
+
+            <!-- <menuitem action="hr_gt_action_recibo_pago" id="menu_recibo_pago" parent="hr_payroll.menu_hr_payroll_root"/>
+            <report id="hr_gt_action_recibo_pago" model="hr_gt.recibo_pago.wizard" string="Reibo pago" report_type="qweb-pdf" name="hr_gt.recibo_pago.wizard" file="hr_gt.recibo_pago.wizard"/>
+ -->
+
+
+
+    </data>
+</odoo>

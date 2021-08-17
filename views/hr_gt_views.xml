@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data>
+
+
+        <record id="view_hr_gt_formato_planilla_form" model="ir.ui.view">
+            <field name="name">hr_gt.formato_planilla.form</field>
+            <field name="model">hr_gt.formato_planilla</field>
+            <field name="arch" type="xml">
+                <form string="Planilla">
+                    <sheet>
+                        <group>
+                            <field name="nombre"/>
+                            <field name="salario"/>
+                        </group>
+                        <notebook>
+                            <page string="Ingresos">
+                                <label for="ingreso_ids" string="Ingresos"/>
+                                <field name="ingreso_ids">
+                                    <tree string="Ingresos" editable="bottom">
+                                        <field name="nombre"/>
+                                        <field name="regla_ids" widget="many2many_tags"/>
+                                    </tree>
+                                </field>
+                            </page>
+                            <page string="Egresos">
+                                <label for="egreso_ids" string="Deducciones"/>
+                                <field name="egreso_ids">
+                                    <tree string="Egresos" editable="bottom">
+                                        <field name="nombre"/>
+                                        <field name="regla_ids" widget="many2many_tags"/>
+                                    </tree>
+                                </field>
+                            </page>
+                        </notebook>
+                    </sheet>
+                </form>
+            </field>
+        </record>
+
+
+        <record id="view_hr_gt_formato_planilla_tree" model="ir.ui.view">
+            <field name="name">hr_gt.formato_planilla.tree</field>
+            <field name="model">hr_gt.formato_planilla</field>
+            <field name="arch" type="xml">
+                <tree string="Formato">
+                    <field name="nombre"/>
+                </tree>
+            </field>
+        </record>
+
+
+        <record id="action_hr_gt_formato_planilla" model="ir.actions.act_window">
+            <field name="name">Formato de planilla</field>
+            <field name="res_model">hr_gt.formato_planilla</field>
+            <field name="view_mode">tree,form</field>
+            <field name="help" type="html">
+              <p class="oe_view_nocontent_create">
+              </p>
+            </field>
+        </record>
+
+
+        <menuitem
+            id="hr_gt_menu_planilla"
+            name="Formato de planilla"
+            action="action_hr_gt_formato_planilla"
+            parent="hr_payroll.menu_hr_payroll_configuration"
+            sequence="25"
+            groups="hr.group_hr_manager"/>
+
+
+    </data>
+</odoo>
