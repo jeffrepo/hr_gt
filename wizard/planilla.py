@@ -73,8 +73,6 @@ class planilla_wizard(models.TransientModel):
             if w.formato_planilla_id.egreso_ids:
                 egresos_lista = [0]*len(w.formato_planilla_id.egreso_ids)
 
-            logging.warning(ingresos_lista)
-            logging.warning(egresos_lista)
             if w.agrupar_estructura:
                 if w.nomina_ids:
                     for lote in w.nomina_ids:
@@ -96,9 +94,6 @@ class planilla_wizard(models.TransientModel):
                                             if w.formato_planilla_id.ingreso_ids:
                                                 for columna in w.formato_planilla_id.ingreso_ids:
                                                     if linea.salary_rule_id.id in columna.regla_ids.ids:
-                                                    # logging.warning('POSICION')
-                                                    # logging.warning(w.formato_planilla_id.ingreso_ids)
-                                                    # logging.warning(w.formato_planilla_id.ingreso_ids.ids.index(columna.id))
                                                         posicion_ingreso_regla = w.formato_planilla_id.ingreso_ids.ids.index(columna.id)
                                                         if posicion_ingreso_regla >= 0:
                                                             datos[nomina.struct_id.id]['empleados'][nomina.employee_id.id]['ingresos'][posicion_ingreso_regla] = linea.total
@@ -106,11 +101,8 @@ class planilla_wizard(models.TransientModel):
                                             if w.formato_planilla_id.egreso_ids:
                                                 for columna in w.formato_planilla_id.egreso_ids:
                                                     if linea.salary_rule_id.id in columna.regla_ids.ids:
-                                                        logging.warning('S I ESTA EGRESO')
                                                         posicion_egreso_regla = w.formato_planilla_id.egreso_ids.ids.index(columna.id)
-                                                        logging.warning(posicion_egreso_regla)
                                                         if posicion_egreso_regla >= 0:
-                                                            logging.warning('agrega')
                                                             datos[nomina.struct_id.id]['empleados'][nomina.employee_id.id]['egresos'][posicion_egreso_regla] = linea.total
                                                             datos[nomina.struct_id.id]['totales_egresos'][posicion_egreso_regla] += linea.total
             if w.agrupar_departamento:
@@ -133,9 +125,6 @@ class planilla_wizard(models.TransientModel):
                                         if w.formato_planilla_id.ingreso_ids:
                                             for columna in w.formato_planilla_id.ingreso_ids:
                                                 if linea.salary_rule_id.id in columna.regla_ids.ids:
-                                                    logging.warning('POSICION')
-                                                    logging.warning(w.formato_planilla_id.ingreso_ids)
-                                                    logging.warning(w.formato_planilla_id.ingreso_ids.ids.index(columna.id))
                                                     posicion_ingreso_regla = w.formato_planilla_id.ingreso_ids.ids.index(columna.id)
                                                     if posicion_ingreso_regla >= 0:
                                                         datos[nomina.contract_id.department_id.id]['empleados'][nomina.employee_id.id]['ingresos'][posicion_ingreso_regla] = linea.total
@@ -149,8 +138,6 @@ class planilla_wizard(models.TransientModel):
                                                         datos[nomina.contract_id.department_id.id]['totales_egresos'][posicion_egreso_regla] += linea.total
             # else:
 
-            logging.warning('DATOS')
-            logging.warning(datos)
             total_general = 0
             cell_format_bold = libro.add_format({'bold': True})
 

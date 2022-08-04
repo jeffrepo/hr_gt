@@ -37,6 +37,13 @@ class HrPayslip(models.Model):
             nomina.ultimo_dia_mes = calendar.monthrange(anio_nomina, mes_nomina)[1]
             dias_de_quincena = nomina.employee_id._get_work_days_data(Datetime.from_string(nomina.date_from), Datetime.from_string(nomina.date_to), calendar=nomina.employee_id.resource_calendar_id)
             nomina.dias_nomina = dias_de_quincena['days'] + 1
+
+            if nomina.input_line_ids and nomina.struct_id.schedule_pay == "bi-monthly" and nomina.fin_mes:
+                salario_anterior = self._obtener_info_nomina_anterior(nomina.employee_id,nomina.date_from)
+                for linea_entrada in self.input_line_ids:
+                    if linea_entrada.input_type_id.code == "SalarioAnterior":
+                        linea_entrada.amount = salario_anterior
+
             for entrada in nomina.input_line_ids:
                 comisiones = self.env['hr.comision'].search([['empleado_id', '=', nomina.employee_id.id]])
                 if comisiones:
@@ -78,11 +85,12 @@ class HrPayslip(models.Model):
         return res
 
     def unlink(self):
-        if self.contract_id:
-            if self.contract_id.historial_salario_ids:
-                for linea in self.contract_id.historial_salario_ids:
-                    if linea.nomina_id.id == self.id:
-                        linea.unlink()
+        for nomina in self:
+            if nomina.contract_id:
+                if nomina.contract_id.historial_salario_ids:
+                    for linea in nomina.contract_id.historial_salario_ids:
+                        if linea.nomina_id.id == nomina.id:
+                            linea.unlink()
         res = super(HrPayslip, self).unlink()
         return res
 
@@ -155,6 +163,22 @@ class HrPayslip(models.Model):
         logging.warn(res)
         return res
 
+
+    def _obtener_info_nomina_anterior(self,empleado_id,fecha_inicio):
+        salario = 0
+        anio_nomina_busqueda = int(datetime.datetime.strptime(str(fecha_inicio), '%Y-%m-%d').date().strftime('%Y'))
+        mes_nomina_busqueda = int(datetime.datetime.strptime(str(fecha_inicio), '%Y-%m-%d').date().strftime('%m'))
+        fecha_inicial_busqueda = '01/'+str(mes_nomina_busqueda)+'/'+str(anio_nomina_busqueda)
+        nomina_ids = self.env['hr.payslip'].search([('employee_id', '=',  empleado_id.id),('date_to','<', fecha_inicio),('fin_mes','=',False),('date_from','>=',fecha_inicial_busqueda)])
+        logging.warning('_obtener_info_nomina_anterior')
+        logging.warning(nomina_ids)
+        if nomina_ids:
+            for nomina in nomina_ids:
+                for linea in nomina.line_ids:
+                    if linea.code == 'NET':
+                        salario = linea.total
+        return salario
+
     @api.onchange('employee_id','struct_id','contract_id', 'date_from', 'date_to')
     def _onchange_employee(self):
         logging.warn('ONCHANGE')
@@ -163,7 +187,7 @@ class HrPayslip(models.Model):
         anio_nomina = self.date_from.strftime('%Y')
         dia_nomina = self.date_to.strftime('%d')
         entradas_nomina = []
-        if self.contract_id:
+        if self.contract_id and self.employee_id:
             dias_de_quincena = self.employee_id._get_work_days_data(Datetime.from_string(self.date_from), Datetime.from_string(self.date_to), calendar=self.employee_id.resource_calendar_id)
             self.dias_nomina = dias_de_quincena['days'] + 1
             if int(dia_nomina) > 15:
@@ -181,6 +205,11 @@ class HrPayslip(models.Model):
             if entradas_nomina:
                 self.input_line_ids = entradas_nomina
 
+            if self.input_line_ids and self.struct_id.schedule_pay == "bi-monthly" and self.fin_mes:
+                salario_anterior = self._obtener_info_nomina_anterior(self.employee_id,self.date_from)
+                for linea_entrada in self.input_line_ids:
+                    if linea_entrada.input_type_id.code == "SalarioAnterior":
+                        linea_entrada.amount = salario_anterior
             # prestamos = self.env['hr.prestamo'].search([['empleado_id', '=', self.employee_id.id]])
             # if prestamos:
             #     for prestamo in prestamos:
