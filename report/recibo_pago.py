@@ -10,7 +10,6 @@ from dateutil import relativedelta as rdelta
 from odoo.fields import Date, Datetime
 import logging
 from operator import itemgetter
-# import odoo.addons.hr_gt.a_letras
 
 class ReportReciboPago(models.AbstractModel):
     _name = 'report.hr_gt.recibo_pago'
@@ -50,20 +49,33 @@ class ReportReciboPago(models.AbstractModel):
             mes = 'DICIEMBRE'
         return {'mes': mes, 'anio': anio_nomina, 'del':nomina_id.date_start ,'al':nomina_id.date_end,'anio_hoy': anio_hoy,'mes_hoy': mes,'dia_hoy': dia_hoy}
 
+    def fecha_hoy_letras(self):
+        fecha_hoy = date.today()
+        dia = fecha_hoy.day
+        mes = self.get_mes(fecha_hoy.month).upper()
+        anio = fecha_hoy.year
+        fecha_hoy_letras = "GUATEMALA, " + str(dia) + " DE " + str(mes) + " "+ str(anio)
+        return fecha_hoy_letras
+    
     def _get_recibos(self,datos):
         recibos_lista = []
-        nomina_id = self.env['hr.payslip.run'].search([('id','in',datos['nomina_ids'])])
+        logging.warning("get recibos")
+        logging.warning(datos)
+        lote_ids = [x for x in datos['lote_id'] if type(x) == int]
+        logging.warning(lote_ids)
+        nomina_id = self.env['hr.payslip.run'].search([('id','in',lote_ids )])
         recibo_pago_id = self.env['hr_gt.recibo_pago'].search([('id','=',datos['formato_recibo_pago_id'][0])])
         ordenado = []
         lista_ordenada = []
         if nomina_id.bono == False and nomina_id.aguinaldo == False:
             for planilla in nomina_id.slip_ids:
                 dic = {
+                    'company_id': planilla.employee_id.company_id,
                     'empleado': planilla.employee_id,
                     'recibo_pago': recibo_pago_id,
                     'nomina': planilla,
                     'puesto': planilla.employee_id.job_id.name,
-                    'sequence': planilla.employee_id.sequence,
+                    'sequence': planilla.employee_id.id,
                     'ingresos': {},
                     'deducciones': {},
                     'dias_trabajados': 0,
@@ -71,7 +83,7 @@ class ReportReciboPago(models.AbstractModel):
                     'total_deducciones': 0,
                     'liquido_recibir': 0
                 }
-                ordenado.append(planilla.employee_id.sequence)
+                ordenado.append(planilla.employee_id.id)
 
                 if planilla.line_ids:
                     for dias in planilla.worked_days_line_ids:
@@ -82,11 +94,11 @@ class ReportReciboPago(models.AbstractModel):
                 if recibo_pago_id.ingreso_ids:
                     for ingreso in recibo_pago_id.ingreso_ids:
                         if ingreso.id not in dic['ingresos']:
-                            dic['ingresos'][ingreso.id] = {'nombre': ingreso.nombre, 'total': 0}
+                            dic['ingresos'][ingreso.id] = {'nombre': ingreso.name, 'total': 0}
 
                         if planilla.line_ids:
                             for linea in planilla.line_ids:
-                                if linea.salary_rule_id.id in ingreso.regla_ids.ids:
+                                if linea.salary_rule_id.id == ingreso.id:
                                     dic['ingresos'][ingreso.id]['total'] += linea.total
                                     dic['total_ingresos'] += linea.total
                                     dic['liquido_recibir'] += linea.total
@@ -94,19 +106,19 @@ class ReportReciboPago(models.AbstractModel):
                 if recibo_pago_id.deduccion_ids:
                     for deduccion in recibo_pago_id.deduccion_ids:
                         if deduccion.id not in dic['deducciones']:
-                            dic['deducciones'][deduccion.id] = {'nombre': deduccion.nombre, 'total': 0}
+                            dic['deducciones'][deduccion.id] = {'nombre': deduccion.name, 'total': 0}
 
                         if planilla.line_ids:
                             for linea in planilla.line_ids:
-                                if linea.salary_rule_id.id in deduccion.regla_ids.ids:
+                                if linea.salary_rule_id.id == deduccion.id:
                                     if linea.total < 0:
                                         dic['deducciones'][deduccion.id]['total'] += (linea.total *-1)
                                         dic['total_deducciones'] += (linea.total*-1)
-                                        dic['liquido_recibir'] -= (linea.total*-1)
+                                        dic['liquido_recibir'] += (linea.total)
                                     else:
                                         dic['deducciones'][deduccion.id]['total'] += (linea.total)
                                         dic['total_deducciones'] += (linea.total)
-                                        dic['liquido_recibir'] -= (linea.total)
+                                        dic['liquido_recibir'] += (linea.total)
 
                 recibos_lista.append(dic)
 
@@ -179,11 +191,11 @@ class ReportReciboPago(models.AbstractModel):
                                     if linea.total < 0:
                                         dic['deducciones'][deduccion.id]['total'] += (linea.total *-1)
                                         dic['total_deducciones'] += (linea.total*-1)
-                                        dic['liquido_recibir'] -= (linea.total*-1)
+                                        dic['liquido_recibir'] += (linea.total*-1)
                                     else:
                                         dic['deducciones'][deduccion.id]['total'] += (linea.total)
                                         dic['total_deducciones'] += (linea.total)
-                                        dic['liquido_recibir'] -= (linea.total)
+                                        dic['liquido_recibir'] += (linea.total)
                 recibos_lista.append(dic)
             # for s in sorted(ordenado):
             #     for r in recibos_lista:
@@ -244,6 +256,7 @@ class ReportReciboPago(models.AbstractModel):
             #             lista_ordenada.append(r)
 
         # logging.warn(recibos_lista)
+        logging.warning(recibos_lista)
         return sorted(recibos_lista, key = lambda i: i['sequence'])
 
 
@@ -324,40 +337,24 @@ class ReportReciboPago(models.AbstractModel):
 
     def fecha_hoy(self):
         return date.today().strftime("%d/%m/%Y")
-    # def pagos_deducciones(self,o):
-    #     ingresos = 0
-    #     descuentos = 0
-    #     datos = {'ordinario': 0, 'extra_ordinario':0,'bonificacion':0}
-    #     for linea in o.linea_ids:
-    #         if linea.salary_rule_id.id in o.company_id.ordinario_ids.ids:
-    #             datos['ordinario'] += linea.total
-    #         elif linea.salary_rule_id.id in o.company_id.extra_ordinario_ids.ids:
-    #             datos['extra_ordinario'] += linea.total
-    #         elif linea.salary_rule_id.id in o.company_id.bonificacion_ids.ids:
-    #             datos['bonificacion'] += linea.total
-    #     return True
-
-    # @api.model
-    # def _get_report_values(self, docids, data=None):
-    #     return self.get_report_values(docids, data)
 
 
 # {'context': {'tz': False, 'uid': 1, 'params':
 # {'action': 473}, 'active_model': 'hr_gt.recibo_pago.wizard', 'active_id': 5, 'active_ids': [5], 'search_disable_custom_filters': True}, 'ids': [], 'model': 'hr_gt.recibo_pago.wizard', 'form': {'id': 5, 'nomina_ids': [17], 'formato_recibo_pago_id': [1, 'RECIBO DE PAGO PLANILLA'], 'fecha_inicio': False, 'fecha_fin': False, 'create_uid': [1, 'Administrator'], 'create_date': '2020-06-22 01:42:19', 'write_uid': [1, 'Administrator'], 'write_date': '2020-06-22 01:42:19', 'display_name': 'hr_gt.recibo_pago.wizard,5', '__last_update': '2020-06-22 01:42:19'}}
-
+        
     @api.model
-    def get_report_values(self, docids, data=None):
-        self.model = 'hr.payslip.run'
-        docs = self.env[self.model].browse(docids)
+    def _get_report_values(self, docids, data=None):
+        docs = self.env['hr.payslip.run'].browse(docids)
         return {
             'doc_ids': docids,
-            'doc_model': self.model,
+            'doc_model': 'hr.payslip.run',
             'docs': docs,
             '_get_recibos': self._get_recibos,
             'data': data['form'],
             'mes_letras': self.mes_letras,
             'tipo_recibo': self.tipo_recibo,
             '_get_fecha_bono': self._get_fecha_bono,
+            'fecha_hoy_letras': self.fecha_hoy_letras,
             # 'mes_letras': self.mes_letras,
             # 'fecha_hoy': self.fecha_hoy,
             # 'a_letras': odoo.addons.hr_gt.a_letras,

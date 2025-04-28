@@ -16,6 +16,7 @@ class HrPayslip(models.Model):
 
     fin_mes = fields.Boolean('Fin de mes')
     dias_nomina = fields.Integer('Días de nomina')
+    dia_mes = fields.Integer('Dias del mes')
 
     def existe_entrada(self,entrada_ids,entrada_id):
         existe_entrada = False
@@ -24,63 +25,63 @@ class HrPayslip(models.Model):
                 existe_entrada = True
         return existe_entrada
 
+    @api.depends('employee_id', 'contract_id', 'struct_id', 'date_from', 'date_to', 'struct_id')
+    def _compute_input_line_ids(self):
+        res = super(HrPayslip, self)._compute_input_line_ids()
+        for slip in self:           
+            if slip.employee_id and slip.struct_id and slip.struct_id.input_line_type_ids:
+                mes_nomina = slip.date_from.month
+                anio_nomina = slip.date_from.year
+                dia_nomina = slip.date_to.day
+                descuentos = {}
+                bonificaciones = {}
+                descuento_ids = self.env["hr_gt.otra_entrada"].search([("tipo",'=','descuento'),("mes",'=',mes_nomina), ("anio","=",anio_nomina), ("empleado_id","=", slip.employee_id.id)])
+                bonificacion_ids = self.env["hr_gt.otra_entrada"].search([("tipo",'=','bonificacion'), ("anio","=",anio_nomina), ("empleado_id","=", slip.employee_id.id)])
+                
+                logging.warning(descuento_ids)
+                logging.warning(bonificacion_ids)
+                
+                if descuento_ids:
+                    for descuento in descuento_ids:
+                        if descuento.codigo not in descuentos:
+                            descuentos[descuento.codigo] = 0
+                        descuentos[descuento.codigo] += descuento.monto
+
+                if bonificacion_ids:
+                    for bonifcacion in bonificacion_ids:
+                        if bonifcacion.codigo not in bonificaciones:
+                            bonificaciones[bonifcacion.codigo] = 0
+                        bonificaciones[bonifcacion.codigo] += bonifcacion.monto
+                
+                input_line_vals = []
+                if slip.input_line_ids:
+                    slip.input_line_ids.unlink()
+
+                for line in slip.struct_id.input_line_type_ids:
+                    monto = 0
+                    if line.code in bonificaciones:
+                        monto = bonificaciones[line.code]
+                        
+                    if line.code in descuentos:
+                        monto = descuentos[line.code]
+                        
+                    input_line_vals.append((0,0,{
+                        'name': line.name,
+                        'amount': monto,
+                        'input_type_id': line.id,
+                    }))
+                slip.update({'input_line_ids': input_line_vals})
+        return res
+    
     def compute_sheet(self):
         for nomina in self:
-            mes_nomina = int(nomina.date_from.strftime('%m'))
-            dia_nomina = int(nomina.date_to.strftime('%d'))
-            anio_nomina = int(nomina.date_from.strftime('%Y'))
-            valor_pago = 0
-            porcentaje_pagar = 0
-            if int(dia_nomina) > 15:
-                nomina.fin_mes = True
-
-            nomina.ultimo_dia_mes = calendar.monthrange(anio_nomina, mes_nomina)[1]
-            dias_de_quincena = nomina.employee_id._get_work_days_data(Datetime.from_string(nomina.date_from), Datetime.from_string(nomina.date_to), calendar=nomina.employee_id.resource_calendar_id)
+            reference_calendar = nomina._get_out_of_contract_calendar()
+            dias_de_quincena = reference_calendar.get_work_duration_data(Datetime.from_string(nomina.date_from), Datetime.from_string(nomina.date_to), compute_leaves=False,domain = False)
             nomina.dias_nomina = dias_de_quincena['days'] + 1
-
-            if nomina.input_line_ids and nomina.struct_id.schedule_pay == "bi-monthly" and nomina.fin_mes:
-                salario_anterior = self._obtener_info_nomina_anterior(nomina.employee_id,nomina.date_from)
-                for linea_entrada in self.input_line_ids:
-                    if linea_entrada.input_type_id.code == "SalarioAnterior":
-                        linea_entrada.amount = salario_anterior
-
-            for entrada in nomina.input_line_ids:
-                comisiones = self.env['hr.comision'].search([['empleado_id', '=', nomina.employee_id.id]])
-                if comisiones:
-                    for comision in comisiones:
-                        if nomina.fin_mes == True and comision.fin_mes == True and int(omision.mes) ==  int(mes_nomina) and int(comision.anio) == int(anio_nomina) and str(entrada.input_type_id.code) == str(comision.codigo):
-                            entrada.amount += comision.total
-                        elif nomina.fin_mes == False and comision.fin_mes == False and int(comision.mes) == int(mes_nomina) and int(comision.anio) == int(anio_nomina) and str(entrada.input_type_id.code) == str(comision.codigo):
-                            logging.warn('prueba')
-                            entrada.amount += comision.total
-
-                prestamos = self.env['hr.prestamo'].search([['empleado_id', '=', nomina.employee_id.id]])
-                if prestamos:
-                    for prestamo in prestamos:
-                        anio_prestamo = int(prestamo.fecha_inicio.strftime('%Y'))
-                        if (prestamo.codigo == entrada.input_type_id.code) and (nomina.fin_mes == True and prestamo.fin_mes == True) and ((prestamo.estado == 'nuevo') or (prestamo.estado == 'proceso')):
-                            nominas = []
-                            for lineas in prestamo.prestamo_ids:
-                                if int(lineas.mes) == int(mes_nomina) and int(lineas.anio) == int(anio_nomina):
-                                    nominas.append(nomina.id)
-                                    lineas.nomina_ids = [(6, 0, nominas)]
-                                    entrada.amount += lineas.valor
-                        elif (prestamo.codigo == entrada.input_type_id.code) and (nomina.fin_mes == False and prestamo.fin_mes == False) and ((prestamo.estado == 'nuevo') or (prestamo.estado == 'proceso')):
-                            nominas = []
-                            for lineas in prestamo.prestamo_ids:
-                                if int(lineas.mes) == int(mes_nomina) and int(lineas.anio) == int(anio_nomina):
-                                    nominas.append(nomina.id)
-                                    lineas.nomina_ids = [(6, 0, nominas)]
-                                    entrada.amount += lineas.valor
-
-            historial_dic = {
-                'fecha': nomina.date_to,
-                'salario': nomina.contract_id.wage,
-                'nomina_id': nomina.id,
-                'contrato_id': nomina.contract_id.id
-
-            }
-            historial_salario_id = self.env['hr.historial_salario'].create(historial_dic)
+            logging.warning(nomina.date_to.year)
+            numero_dias = calendar.monthrange(nomina.date_to.year, nomina.date_to.month)
+            logging.warning(numero_dias)
+            nomina.dia_mes = numero_dias[1]
         res =  super(HrPayslip, self).compute_sheet()
         return res
 
@@ -111,57 +112,57 @@ class HrPayslip(models.Model):
                 dias += linea['number_of_days']
         return {'dias':dias, 'horas': horas}
 
-    def _get_worked_day_lines(self):
-        res = super(HrPayslip, self)._get_worked_day_lines()
-        tipos_ausencias_ids = self.env['hr.leave.type'].search([])
-        datos = self.horas_sumar(res)
-        ausencias_restar = []
+    # def _get_worked_day_lines(self):
+    #     res = super(HrPayslip, self)._get_worked_day_lines()
+    #     tipos_ausencias_ids = self.env['hr.leave.type'].search([])
+    #     datos = self.horas_sumar(res)
+    #     ausencias_restar = []
 
-        dias_ausentados_restar = 0
-        contracts = False
-        if self.employee_id.contract_id:
-            contracts = self.employee_id.contract_id
+    #     dias_ausentados_restar = 0
+    #     contracts = False
+    #     if self.employee_id.contract_id:
+    #         contracts = self.employee_id.contract_id
 
-        for ausencia in tipos_ausencias_ids:
-            if ausencia.work_entry_type_id and ausencia.work_entry_type_id.descontar_nomina:
-                logging.warn(ausencia.work_entry_type_id.code)
-                ausencias_restar.append(ausencia.work_entry_type_id.id)
+    #     for ausencia in tipos_ausencias_ids:
+    #         if ausencia.work_entry_type_id and ausencia.work_entry_type_id.descontar_nomina:
+    #             logging.warn(ausencia.work_entry_type_id.code)
+    #             ausencias_restar.append(ausencia.work_entry_type_id.id)
 
-        trabajo_id = self.env['hr.work.entry.type'].search([('code','=','DIAS')])
-        logging.warn('TRABAJO ID')
-        logging.warn(trabajo_id)
-        for r in res:
-            tipo_id = self.env['hr.work.entry.type'].search([('id','=',r['work_entry_type_id'])])
-            if tipo_id and tipo_id.is_leave == False:
-                r['number_of_hours'] += datos['horas']
-                r['number_of_days'] += datos['dias']
+    #     trabajo_id = self.env['hr.work.entry.type'].search([('code','=','DIAS')])
+    #     logging.warn('TRABAJO ID')
+    #     logging.warn(trabajo_id)
+    #     for r in res:
+    #         tipo_id = self.env['hr.work.entry.type'].search([('id','=',r['work_entry_type_id'])])
+    #         if tipo_id and tipo_id.is_leave == False:
+    #             r['number_of_hours'] += datos['horas']
+    #             r['number_of_days'] += datos['dias']
 
-            if len(ausencias_restar)>0:
-                if r['work_entry_type_id'] in ausencias_restar:
-                    dias_ausentados_restar += r['number_of_days']
-        if contracts:
-            if contracts.date_start and self.date_from <= contracts.date_start <= self.date_to:
-                dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(contracts.date_start), Datetime.from_string(self.date_to), calendar=contracts.resource_calendar_id)
-                dia_inicio_contrato = int(contracts.date_start.strftime('%d'))
-                res.append({'work_entry_type_id': trabajo_id.id, 'sequence': 10, 'number_of_days': (dias_laborados['days']+1 - dias_ausentados_restar) if (dias_laborados['days'] - dias_ausentados_restar) <= 30 else 30})
-            elif contracts.date_end and self.date_from <= contracts.date_end <= self.date_to:
-                dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(self.date_from), Datetime.from_string(contracts.date_end), calendar=contracts.resource_calendar_id)
-                dias_trabajo = int(contracts.date_end.strftime('%d'))
-                res.append({'work_entry_type_id': trabajo_id.id, 'sequence': 10, 'number_of_days': (dias_laborados['days'] + 1 - dias_ausentados_restar) if (dias_laborados['days'] + 1 - dias_ausentados_restar) <= 30 else 30})
-            else:
-                if contracts.structure_type_id.default_schedule_pay == 'monthly':
-                    res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': 30 - dias_ausentados_restar})
-                if contracts.structure_type_id.default_schedule_pay == 'bi-monthly':
-                    dias_de_quincena = self.employee_id._get_work_days_data(Datetime.from_string(self.date_from), Datetime.from_string(self.date_to), calendar=self.employee_id.resource_calendar_id)
-                    dias_de_quincena = dias_de_quincena['days'] + 1
-                    res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': dias_de_quincena - dias_ausentados_restar})
-                # Cálculo de días para catorcena
-                if contracts.structure_type_id.default_schedule_pay == 'bi-weekly':
-                    dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(nomina.date_from), Datetime.from_string(nomina.date_to), calendar=contracts.resource_calendar_id)
-                    res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': (dias_laborados['days']+1 - dias_ausentados_restar)})
+    #         if len(ausencias_restar)>0:
+    #             if r['work_entry_type_id'] in ausencias_restar:
+    #                 dias_ausentados_restar += r['number_of_days']
+    #     if contracts:
+    #         if contracts.date_start and self.date_from <= contracts.date_start <= self.date_to:
+    #             dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(contracts.date_start), Datetime.from_string(self.date_to), calendar=contracts.resource_calendar_id)
+    #             dia_inicio_contrato = int(contracts.date_start.strftime('%d'))
+    #             res.append({'work_entry_type_id': trabajo_id.id, 'sequence': 10, 'number_of_days': (dias_laborados['days']+1 - dias_ausentados_restar) if (dias_laborados['days'] - dias_ausentados_restar) <= 30 else 30})
+    #         elif contracts.date_end and self.date_from <= contracts.date_end <= self.date_to:
+    #             dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(self.date_from), Datetime.from_string(contracts.date_end), calendar=contracts.resource_calendar_id)
+    #             dias_trabajo = int(contracts.date_end.strftime('%d'))
+    #             res.append({'work_entry_type_id': trabajo_id.id, 'sequence': 10, 'number_of_days': (dias_laborados['days'] + 1 - dias_ausentados_restar) if (dias_laborados['days'] + 1 - dias_ausentados_restar) <= 30 else 30})
+    #         else:
+    #             if contracts.structure_type_id.default_schedule_pay == 'monthly':
+    #                 res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': 30 - dias_ausentados_restar})
+    #             if contracts.structure_type_id.default_schedule_pay == 'bi-monthly':
+    #                 dias_de_quincena = self.employee_id._get_work_days_data(Datetime.from_string(self.date_from), Datetime.from_string(self.date_to), calendar=self.employee_id.resource_calendar_id)
+    #                 dias_de_quincena = dias_de_quincena['days'] + 1
+    #                 res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': dias_de_quincena - dias_ausentados_restar})
+    #             # Cálculo de días para catorcena
+    #             if contracts.structure_type_id.default_schedule_pay == 'bi-weekly':
+    #                 dias_laborados = self.employee_id._get_work_days_data(Datetime.from_string(nomina.date_from), Datetime.from_string(nomina.date_to), calendar=contracts.resource_calendar_id)
+    #                 res.append({'work_entry_type_id': trabajo_id.id,'sequence': 10,'number_of_days': (dias_laborados['days']+1 - dias_ausentados_restar)})
 
-        logging.warn(res)
-        return res
+    #     logging.warn(res)
+    #     return res
 
 
     def _obtener_info_nomina_anterior(self,empleado_id,fecha_inicio):
@@ -179,73 +180,12 @@ class HrPayslip(models.Model):
                         salario = linea.total
         return salario
 
-    @api.onchange('employee_id','struct_id','contract_id', 'date_from', 'date_to')
-    def _onchange_employee(self):
-        logging.warn('ONCHANGE')
-        res = super(HrPayslip, self)._onchange_employee()
-        mes_nomina = self.date_from.strftime('%m')
-        anio_nomina = self.date_from.strftime('%Y')
-        dia_nomina = self.date_to.strftime('%d')
-        entradas_nomina = []
-        if self.contract_id and self.employee_id:
-            dias_de_quincena = self.employee_id._get_work_days_data(Datetime.from_string(self.date_from), Datetime.from_string(self.date_to), calendar=self.employee_id.resource_calendar_id)
-            self.dias_nomina = dias_de_quincena['days'] + 1
-            if int(dia_nomina) > 15:
-                self.fin_mes = True
-            self.dias_nomina = 1
-            entradas = self._obtener_entrada(self.contract_id)
-            if entradas:
-                for entrada in entradas:
-                    existe_entrada = False
-                    if self.input_line_ids:
-                        existe_entrada = self.existe_entrada(self.input_line_ids,entrada)
-                        logging.warn(existe_entrada)
-                    if existe_entrada == False:
-                        entradas_nomina.append((0, 0, {'input_type_id':entrada.id}))
-            if entradas_nomina:
-                self.input_line_ids = entradas_nomina
-
-            if self.input_line_ids and self.struct_id.schedule_pay == "bi-monthly" and self.fin_mes:
-                salario_anterior = self._obtener_info_nomina_anterior(self.employee_id,self.date_from)
-                for linea_entrada in self.input_line_ids:
-                    if linea_entrada.input_type_id.code == "SalarioAnterior":
-                        linea_entrada.amount = salario_anterior
-            # prestamos = self.env['hr.prestamo'].search([['empleado_id', '=', self.employee_id.id]])
-            # if prestamos:
-            #     for prestamo in prestamos:
-            #         for entrada in self.input_line_ids:
-            #             anio_prestamo = int(prestamo.fecha_inicio.strftime('%Y'))
-            #             if (prestamo.codigo == entrada.input_type_id.code) and (self.fin_mes == True and prestamo.fin_mes == True) and ((prestamo.estado == 'nuevo') or (prestamo.estado == 'proceso')):
-            #                 nominas = []
-            #                 for lineas in prestamo.prestamo_ids:
-            #                     if int(lineas.mes) == int(mes_nomina) and int(lineas.anio) == int(anio_nomina):
-            #                         nominas.append(self.id)
-            #                         # lineas.nomina_ids = [(6, 0, nominas)]
-            #                         entrada.amount += lineas.valor
-            #             elif (prestamo.codigo == entrada.input_type_id.code) and (self.fin_mes == False and prestamo.fin_mes == False) and ((prestamo.estado == 'nuevo') or (prestamo.estado == 'proceso')):
-            #                 nominas = []
-            #                 for lineas in prestamo.prestamo_ids:
-            #                     if int(lineas.mes) == int(mes_nomina) and int(lineas.anio) == int(anio_nomina):
-            #                         nominas.append(self.id)
-            #                         # lineas.nomina_ids = [(6, 0, nominas)]
-            #                         entrada.amount += lineas.valor
-            #
-            # comisiones = self.env['hr.comision'].search([['empleado_id', '=', self.employee_id.id]])
-            # if comisiones:
-            #     for comision in comisiones:
-            #         for entrada in self.input_line_ids:
-            #             if self.fin_mes == True and comision.fin_mes == True and comision.mes ==  int(mes_nomina) and comision.anio == anio_nomina and entrada.input_type_id.code == comision.codigo:
-            #                 logging.warn('if')
-            #                 entrada.amount += comision.total
-            #             elif self.fin_mes == False and comision.fin_mes == False and comision.mes ==  int(mes_nomina) and comision.anio == anio_nomina and entrada.input_type_id.code == comision.codigo:
-            #                 logging.warn('else')
-            #                 entrada.amount += comision.total
-        return res
-
 class HrPayslipRun(models.Model):
     _inherit = 'hr.payslip.run'
 
     porcentaje_prestamo = fields.Float('Prestamo (%)')
+    bono = fields.Boolean("Bono")
+    aguinaldo = fields.Boolean("Aguinaldo")
 
     def generar_pagos(self):
         pagos = self.env['account.payment'].search([('nomina_id', '!=', False)])

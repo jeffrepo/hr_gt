@@ -1,0 +1,112 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <template id="recibo_pago">
+        <t t-call="web.html_container">
+            <t t-set="data_report_margin_top" t-value="12"/>
+            <t t-set="data_report_header_spacing" t-value="9"/>
+            <t t-set="data_report_dpi" t-value="110"/>
+            <t t-set="recibos" t-value="_get_recibos(data)"/>
+            <t t-foreach="recibos" t-as="o">
+                <div class="article">
+                    <div class="page" style="font-size:13px">
+                        
+                          <div class="text-center">
+                              <div style="font-size:45px">
+                                <strong><span t-esc="o['company_id'].name"/></strong>
+                              </div>
+                              <div style="font-size:30px">
+                                <u><strong><span t-esc="o['recibo_pago'].name"/></strong></u>
+                              </div>
+                              
+                              <br/><br/><br/>
+                              <div style="font-size: 20px">
+                                <table style="width:100%">
+                                  <tr>
+                                    <td style="text-align: left;">Recibi de: <strong><span t-esc="o['company_id'].name"/></strong></td>
+                                    <td></td>
+                                    <td></td>
+                                  </tr>
+                                  <tr>
+                                    <td style="text-align: left;"><strong>MI SALARIO CORRESPONDIENTE DEL:</strong></td>
+                                    <td></td>
+                                    <td><strong><span t-esc="o['nomina'].payslip_run_id.name"/></strong></td>
+                                  </tr>
+                                  <tr>
+                                    <td style="text-align: left;">INTEGRADO DE LA SIGUIENTE MANERA:</td>
+                                    <td></td>
+                                    <td></td>
+                                  </tr>
+                                  <tr>
+                                    <td style="text-align: left;"><strong>INGRESOS:</strong></td>
+                                    <td></td>
+                                    <td></td>
+                                  </tr>
+                                  <tr t-foreach="o['ingresos']" t-as="i">
+                                    <td><span t-esc="o['ingresos'][i]['nombre']"/></td>
+                                    <td></td>
+                                    <td><span t-esc="o['ingresos'][i]['total']" t-options="{'widget': 'monetary', 'display_currency': o['company_id'].currency_id}"/></td>
+                                  </tr>  
+                                  <tr>
+                                    <td></td>
+                                    <td><strong>TOTAL SIN DESCUENTOS</strong></td>
+                                    <td style="border-top: 2px solid black"><span t-esc="o['total_ingresos']" t-options="{'widget': 'monetary', 'display_currency': o['company_id'].currency_id}"/></td>
+                                  </tr>
+                                  <tr>
+                                    <td style="text-align: left;"><strong>(‐)DESCUENTOS:</strong></td>
+                                    <td></td>
+                                    <td></td>
+                                  </tr>
+                                  <tr t-foreach="o['deducciones']" t-as="i">
+                                    <td><span t-esc="o['deducciones'][i]['nombre']"/></td>
+                                    <td></td>
+                                    <td><span t-esc="o['deducciones'][i]['total']" t-options="{'widget': 'monetary', 'display_currency': o['company_id'].currency_id}"/></td>
+                                      
+                                  </tr> 
+                                  <tr>
+                                    <td></td>
+                                    <td><strong>TOTAL DESCUENTOS</strong></td>
+                                    <td style="border-top: 2px solid black"><span t-esc="o['total_deducciones']" t-options="{'widget': 'monetary', 'display_currency': o['company_id'].currency_id}"/></td>
+                                  </tr>
+                                  <tr>
+                                    <td></td>
+                                    <td><strong>LIQUIDO RECIBIDO A MI SATISFACCIÓN:</strong></td>
+                                    <td style="border-top: 2px solid black;border-bottom: 4px solid black"><span t-esc="o['liquido_recibir']" t-options="{'widget': 'monetary', 'display_currency': o['company_id'].currency_id}"/></td>
+                                  </tr>
+                                  <tr>
+                                    <td><strong>EN LETRAS: </strong></td>
+                                    <td><strong></strong></td>
+                                    <td></td>
+                                  </tr>
+                                  <tr>
+                                    <td><span t-esc="fecha_hoy_letras()"/></td>
+                                    <td><strong></strong></td>
+                                    <td></td>
+                                  </tr>
+                                </table>
+                              </div>  
+                              
+                              <br/><br/><br/><br/>
+                              <div style="text-align:left;font-size:13px">
+                                  <t t-if="o['empleado'].bank_account_id">
+                                    DEPOSITADO A CUENTA NO: <span t-esc="o['empleado'].bank_account_id.acc_number"/> <br/>
+                                    BANCO: <span t-esc="o['empleado'].bank_account_id.bank_id.name"/>
+                                  </t>
+                              </div> 
+                              <br/><br/><br/>
+
+                              <div>
+                                <hr style="border-width: 4px;width: 50%;margin-left: auto;margin-right: auto;" width="50%"/>
+                                <center><span t-esc="o['empleado'].name"/></center>
+                              </div>
+ 
+                              
+                              
+                              <!-- <img t-if="o[company_id].logo" t-att-src="image_data_uri(o[company_id].logo)" style="max-height: 45px;" alt="Logo"/> -->
+                          </div>
+                        
+                    </div>
+                </div>
+            </t>
+        </t>
+    </template>
+</odoo>

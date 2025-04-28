@@ -88,7 +88,7 @@ class planilla_wizard(models.TransientModel):
                                     if nomina.employee_id.id not in datos[nomina.struct_id.id]['empleados']:
                                         ingresos_lista_temporal = ingresos_lista
                                         egresos_lista_temporal = egresos_lista
-                                        datos[nomina.struct_id.id]['empleados'][nomina.employee_id.id] = {'nombre_empleado':nomina.employee_id.name,'ingresos': [0]*len(w.formato_planilla_id.ingreso_ids),'egresos': [0]*len(w.formato_planilla_id.egreso_ids) }
+                                        datos[nomina.struct_id.id]['empleados'][nomina.employee_id.id] = {'nombre_empleado':nomina.employee_id.name,'ingresos': [0]*len(w.formato_planilla_id.ingreso_ids),'egresos': [0]*len(w.formato_planilla_id.egreso_ids), 'total_salario': 0 }
 
                                     for linea in nomina.line_ids:
                                             if w.formato_planilla_id.ingreso_ids:
@@ -96,15 +96,18 @@ class planilla_wizard(models.TransientModel):
                                                     if linea.salary_rule_id.id in columna.regla_ids.ids:
                                                         posicion_ingreso_regla = w.formato_planilla_id.ingreso_ids.ids.index(columna.id)
                                                         if posicion_ingreso_regla >= 0:
-                                                            datos[nomina.struct_id.id]['empleados'][nomina.employee_id.id]['ingresos'][posicion_ingreso_regla] = linea.total
-                                                            datos[nomina.struct_id.id]['totales_ingresos'][posicion_ingreso_regla] += linea.total
+                                                            datos[nomina.struct_id.id]['empleados'][nomina.employee_id.id]['ingresos'][posicion_ingreso_regla] += linea.total
+                                                            datos[nomina.struct_id.id]['empleados'][nomina.employee_id.id]['total_salario'] += linea.total if ("Total" or "TOTAL") in columna.name else 0
+                                                            datos[nomina.struct_id.id]['totales_ingresos'][posicion_ingreso_regla] += linea.total if ("Total" or "TOTAL") in columna.name else 0
+                                                            
                                             if w.formato_planilla_id.egreso_ids:
                                                 for columna in w.formato_planilla_id.egreso_ids:
                                                     if linea.salary_rule_id.id in columna.regla_ids.ids:
                                                         posicion_egreso_regla = w.formato_planilla_id.egreso_ids.ids.index(columna.id)
                                                         if posicion_egreso_regla >= 0:
-                                                            datos[nomina.struct_id.id]['empleados'][nomina.employee_id.id]['egresos'][posicion_egreso_regla] = linea.total
-                                                            datos[nomina.struct_id.id]['totales_egresos'][posicion_egreso_regla] += linea.total
+                                                            datos[nomina.struct_id.id]['empleados'][nomina.employee_id.id]['egresos'][posicion_egreso_regla] += linea.total
+                                                            datos[nomina.struct_id.id]['empleados'][nomina.employee_id.id]['total_salario'] += linea.total if ("Total" or "TOTAL") in columna.name else 0
+                                                            datos[nomina.struct_id.id]['totales_egresos'][posicion_egreso_regla] += linea.total if ("Total" or "TOTAL") in columna.name else 0
             if w.agrupar_departamento:
                 if w.nomina_ids:
                     for lote in w.nomina_ids:
@@ -119,7 +122,7 @@ class planilla_wizard(models.TransientModel):
                                     if nomina.employee_id.id not in datos[nomina.contract_id.department_id.id]['empleados']:
                                         ingresos_lista_temporal = ingresos_lista
                                         egresos_lista_temporal = egresos_lista
-                                        datos[nomina.contract_id.department_id.id]['empleados'][nomina.employee_id.id] = {'nombre_empleado': nomina.employee_id.name,'ingresos': [0]*len(w.formato_planilla_id.ingreso_ids),'egresos':  [0]*len(w.formato_planilla_id.egreso_ids) }
+                                        datos[nomina.contract_id.department_id.id]['empleados'][nomina.employee_id.id] = {'nombre_empleado': nomina.employee_id.name,'ingresos': [0]*len(w.formato_planilla_id.ingreso_ids),'egresos':  [0]*len(w.formato_planilla_id.egreso_ids), 'total_salario': 0 }
 
                                     for linea in nomina.line_ids:
                                         if w.formato_planilla_id.ingreso_ids:
@@ -128,14 +131,15 @@ class planilla_wizard(models.TransientModel):
                                                     posicion_ingreso_regla = w.formato_planilla_id.ingreso_ids.ids.index(columna.id)
                                                     if posicion_ingreso_regla >= 0:
                                                         datos[nomina.contract_id.department_id.id]['empleados'][nomina.employee_id.id]['ingresos'][posicion_ingreso_regla] = linea.total
-                                                        datos[nomina.contract_id.department_id.id]['totales_ingresos'][posicion_ingreso_regla] += linea.total
+                                                        
+                                                        datos[nomina.contract_id.department_id.id]['totales_ingresos'][posicion_ingreso_regla] += linea.total if ("Total" or "TOTAL") in columna.name else 0
                                         if w.formato_planilla_id.egreso_ids:
                                             for columna in w.formato_planilla_id.egreso_ids:
                                                 if linea.salary_rule_id.id in columna.regla_ids.ids:
                                                     posicion_egreso_regla = w.formato_planilla_id.egreso_ids.ids.index(columna.id)
                                                     if posicion_egreso_regla >= 0:
                                                         datos[nomina.contract_id.department_id.id]['empleados'][nomina.employee_id.id]['egresos'][posicion_egreso_regla] = linea.total
-                                                        datos[nomina.contract_id.department_id.id]['totales_egresos'][posicion_egreso_regla] += linea.total
+                                                        datos[nomina.contract_id.department_id.id]['totales_egresos'][posicion_egreso_regla] += linea.total if ("Total" or "TOTAL") in columna.name else 0
             # else:
 
             total_general = 0
@@ -155,12 +159,12 @@ class planilla_wizard(models.TransientModel):
                         hoja.write(fila,0,'Nombre',formato_fecha)
                         if w.formato_planilla_id.ingreso_ids:
                             for columna_ingreso in w.formato_planilla_id.ingreso_ids:
-                                hoja.write(fila,columna_encabezado,columna_ingreso.nombre,cell_format_bold)
+                                hoja.write(fila,columna_encabezado,columna_ingreso.name,cell_format_bold)
                                 columna_encabezado += 1
 
                         if w.formato_planilla_id.egreso_ids:
                             for columna_egreso in w.formato_planilla_id.egreso_ids:
-                                hoja.write(fila,columna_encabezado,columna_egreso.nombre,cell_format_bold)
+                                hoja.write(fila,columna_encabezado,columna_egreso.name,cell_format_bold)
                                 columna_encabezado += 1
 
                         hoja.write(fila,columna_encabezado,'Total',cell_format_bold)
@@ -181,40 +185,31 @@ class planilla_wizard(models.TransientModel):
                                 total_salario += valor
                                 columna_empleado += 1
 
-                            hoja.write(fila,columna_empleado,total_salario)
+                            hoja.write(fila,columna_empleado,empleados_info[empleado]['total_salario'])
+                            #hoja.write(fila,columna_empleado,empleados_info['totales_ingresos'])
                             fila += 1
                             columna += 1
 
                         columna_totales = 1
                         total_agrupado = 0
                         for valor in datos[dato]['totales_ingresos']:
-                            hoja.write(fila,columna_totales,valor,cell_format_bold)
+                            #hoja.write(fila,columna_totales,valor,cell_format_bold)
                             total_agrupado += valor
-                            columna_totales += 1
+                            #columna_totales += 1
 
                         for valor in datos[dato]['totales_egresos']:
-                            hoja.write(fila,columna_totales,valor,cell_format_bold)
+                            #hoja.write(fila,columna_totales,valor,cell_format_bold)
                             total_agrupado += valor
-                            columna_totales += 1
-                        hoja.write(fila,columna_totales,total_agrupado,cell_format_bold)
+                            #columna_totales += 1
+                        #hoja.write(fila,columna_totales,total_agrupado,cell_format_bold)
                         total_general += total_agrupado
+
+                        
                         fila += 1
 
                 hoja.write(fila,0,'TOTAL SALARIOS',cell_format_bold)
+                
                 hoja.write(fila,1,total_general,cell_format_bold)
-            # hoja.write(2,1,'IGSS')
-            # hoja.write(2,2,'Puesto')
-            # hoja.write(2,3,'Base mensual')
-            # hoja.write(2,4,'Bonificacion')
-            # hoja.write(2,5,'Dias trabajados')
-            #
-            # contador = 6
-            # cantidad_ingreso = 6
-            # numero_ingresos = 0
-            # cantidad_deduccion = 0
-            # total_total = 0
-            # for linea_ingreso in w.formato_planilla_id.ingreso_ids:
-            #     hoja.write(2,contador,linea_ingreso.nombre)
 
             libro.close()
             datos = base64.b64encode(f.getvalue())
