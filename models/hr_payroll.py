@@ -11,6 +11,13 @@ from dateutil import relativedelta as rdelta
 from odoo.fields import Date, Datetime
 import calendar
 
+class HrPayslipEmployees(models.TransientModel):
+    _inherit = 'hr.payslip.employees'
+
+    def _get_employees(self):
+        res = super(HrPayslipEmployees, self)._get_employees()
+        return False
+
 class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
 
