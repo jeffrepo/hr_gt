@@ -6,7 +6,7 @@
 	        <field name="inherit_id" ref="hr_contract.hr_contract_view_form"/>
 	        <field name="arch" type="xml">
                 <data>
-                    <group name="information" position="inside">
+                    <group name="salary_info" position="inside">
 
                         <label for="bonificacion_incentivo"/>
                         <div class="o_row" name="bonificacion_incentivo">
