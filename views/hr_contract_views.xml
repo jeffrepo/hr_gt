@@ -7,6 +7,7 @@
 	        <field name="arch" type="xml">
                 <data>
                     <group name="salary_and_advantages" position="inside">
+
                         <label for="bonificacion_incentivo"/>
                         <div class="o_row" name="bonificacion_incentivo">
                             <field name="bonificacion_incentivo" nolabel="1"/>
@@ -28,12 +29,13 @@
                         <div class="o_row" name="isr">
                             <field name="isr" nolabel="1"/>
                         </div>
-                        <label for="salario_total"/>
+                        <field name="no_igss"/>
+                        <!-- <label for="salario_total"/>
                         <div class="o_row" name="salario_total">
                             <field name="salario_total" nolabel="1"/>
-                        </div>
+                        </div> -->
                     </group>
-                    <group name="salary_and_advantages" position="after">
+                    <!-- <group name="salary_and_advantages" position="after">
                         <group>
                             <field name="historial_salario_ids">
                               <tree string="Hitorial de salario" editable="bottom">
@@ -43,7 +45,7 @@
                               </tree>
                             </field>
                       </group>
-                    </group>
+                    </group> -->
                 </data>
 	        </field>
 	    </record>

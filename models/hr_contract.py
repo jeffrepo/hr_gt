@@ -13,7 +13,8 @@ class Contract(models.Model):
     salario_total = fields.Monetary('Salario total', compute='calculo_total')
     historial_salario_ids = fields.One2many('hr.historial_salario','contrato_id',string='Historial de salario')
     salario_facturado = fields.Monetary('Salario facturado', digits=(16,2), track_visibility='onchange')
+    no_igss = fields.Boolean('No IGSS')
 
-    def calculo_total(self):
-        for record in self:
-            record.salario_total = record.wage + record.bonificacion_incentivo
+    # def calculo_total(self):
+    #     for record in self:
+    #         record.salario_total = record.wage + record.bonificacion_incentivo

@@ -16,7 +16,7 @@
         'views/hr_gt_views.xml',
         'data/data.xml',
         'views/recibo_pago.xml',
-        # 'views/hr_contract_views.xml',
+        'views/hr_contract_views.xml',
         'views/res_company_views.xml',
         'security/ir.model.access.csv',
     ],
