@@ -43,7 +43,7 @@ class HrPayslip(models.Model):
                 descuentos = {}
                 bonificaciones = {}
                 descuento_ids = self.env["hr_gt.otra_entrada"].search([("tipo",'=','descuento'),("mes",'=',mes_nomina), ("anio","=",anio_nomina), ("empleado_id","=", slip.employee_id.id)])
-                bonificacion_ids = self.env["hr_gt.otra_entrada"].search([("tipo",'=','bonificacion'), ("anio","=",anio_nomina), ("empleado_id","=", slip.employee_id.id)])
+                bonificacion_ids = self.env["hr_gt.otra_entrada"].search([("tipo",'=','bonificacion'), ("anio","=",anio_nomina),("mes",'=',mes_nomina) ,("empleado_id","=", slip.employee_id.id)])
                 
                 logging.warning(descuento_ids)
                 logging.warning(bonificacion_ids)
