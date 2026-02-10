@@ -63,7 +63,7 @@ class HrGtOtraEntrada(models.Model):
     codigo = fields.Char(string='Código',required=True)
     monto = fields.Float('Monto')
     tipo = fields.Selection([('bonificacion', 'Bonificacion'), ('descuento', 'Descuento')], string='Tipo')
-    company_id = fields.Many2one('res.company',string='Compañia',required=True, readonly=True, default=lambda self: self.env.user.company_id)
+    company_id = fields.Many2one('res.company',string='Compañia',required=True, default=lambda self: self.env.company, readonly=False)
     
 class HrGtDescuento(models.Model):
     _name = 'hr_gt.descuento'
