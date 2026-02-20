@@ -53,6 +53,10 @@ class hr_employee(models.Model):
     titulo_obtenido  = fields.Char('Titulo obtenido')
     pueblo_pertenencia  = fields.Char('Pueblo pertenecia')
     lugar_nacimiento = fields.Char('Lugar de nacimiento')
+    municipio_nacimiento_id = fields.Many2one(
+        "hr_gt.municipio",
+        string="Municipio de nacimiento",
+    )
 
     def _get_edad(self):
         for employee in self:

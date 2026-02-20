@@ -82,7 +82,7 @@ class igss_wizard(models.TransientModel):
                         # anio_planilla_buscada = fecha_planilla_buscada.year
                         # if mes_planilla_buscada == mes_planilla and anio_planilla == anio_planilla_buscada:
                         for linea in n.line_ids:
-                            if linea.code == 'SNT':
+                            if linea.code == 'NET':
                                 salario += linea.total
                 datos += str(salario) + '|'
 
@@ -106,7 +106,7 @@ class igss_wizard(models.TransientModel):
                 datos+= '|' + str(nominas_lista[nomina]['empleado'].condicion_laboral if nominas_lista[nomina]['empleado'].condicion_laboral else '')
                 datos += '|' + '|' + '\r\n'
             datos += '[suspendidos]' + '\r\n'
-            ausencia_ids = self.env['hr.holidays'].search([('state','=','validate')])
+            ausencia_ids = self.env['hr.leave'].search([('state','=','validate')])
             if ausencia_ids:
                 for ausencia in ausencia_ids:
                     if ausencia.holiday_status_id.name == 'IGSS':
@@ -142,14 +142,14 @@ class igss_wizard(models.TransientModel):
 
 
 
-    @api.multi
-    def print_report(self):
-        data = {
-             'ids': [],
-             'model': 'hr_gt.igss.wizard',
-             'form': self.read()[0]
-        }
-        return self.env.ref('hr_gt.action_igss').report_action(self, data=data)
+    # @api.multi
+    # def print_report(self):
+    #     data = {
+    #          'ids': [],
+    #          'model': 'hr_gt.igss.wizard',
+    #          'form': self.read()[0]
+    #     }
+    #     return self.env.ref('hr_gt.action_igss').report_action(self, data=data)
 
     # @api.multi
     # def print_report(self):

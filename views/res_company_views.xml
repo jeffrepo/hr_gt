@@ -11,8 +11,9 @@
                         <page string="Datos requeridos">
                             <group>
                                 <group>
-                                    <!-- <field name="numero_patronal"/> -->
+                                    <field name="numero_patronal"/>
                                     <field name="version_mensaje"/>
+                                    
                                 </group>
                                 <group>
                                     <label for="centro_ids" string="Centros"/>

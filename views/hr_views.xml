@@ -21,6 +21,7 @@
                             <field name="segundo_apellido"/>
                             <field name="apellido_casada"/>
                             <field name="nacionalidad"/>
+                            <field name="municipio_nacimiento_id"/>
                             <field name="lugar_nacimiento"/>
                             <field name="tipo_discapacidad"/>
                             <field name="gender"/>

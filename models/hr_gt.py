@@ -70,3 +70,10 @@ class HrGtDescuento(models.Model):
 
 class HrGtBonificación(models.Model):
     _name = 'hr_gt.bonificacion'
+
+class HrGtMunicipio(models.Model):
+    _name = "hr_gt.municipio"
+    _description = "Municipios Guatemala"
+
+    code = fields.Integer(string="Código", required=True, index=True)
+    name = fields.Char(string="Municipio", required=True)

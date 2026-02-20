@@ -6,3 +6,5 @@ id,name,model_id:id,group_id:id,perm_read,perm_write,perm_create,perm_unlink
 "access_hr_gt_egreso_columna
 ",hr_gt_formato_planilla_egreso_columna,hr_gt.model_hr_gt_egreso_columna,hr.group_hr_manager,1,1,1,1
 access_hr_gt_historial_salario,hr_gt_historial_salario,hr_gt.model_hr_historial_salario,hr.group_hr_manager,1,1,1,1
+access_hr_gt_informe_empleador_wizard,access_hr_gt_informe_empleador_wizard,model_hr_gt_informe_empleador_wizard,hr.group_hr_user,1,1,1,1
+access_hr_gt_municipio,access_hr_gt_municipio,model_hr_gt_municipio,hr.group_hr_user,1,1,1,1

@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="view_hr_gt_informe_empleador_wizard_form" model="ir.ui.view">
+        <field name="name">hr.gt.informe.empleador.wizard.form</field>
+        <field name="model">hr.gt.informe.empleador.wizard</field>
+        <field name="arch" type="xml">
+            <form string="Informe Empleador (GT)">
+              <group>
+                <field name="year"/>
+              </group>
+            
+              <footer>
+                <button string="Generar XLSX" type="object" name="action_generate" class="btn-primary"/>
+                <button string="Cerrar" special="cancel" class="btn-secondary"/>
+              </footer>
+            
+              <group attrs="{'invisible': [('file_data', '=', False)]}">
+                <field name="file_name" readonly="1"/>
+                <field name="file_data" filename="file_name" readonly="1"/>
+              </group>
+            </form>
+        </field>
+    </record>
+
+    <record id="action_hr_gt_informe_empleador_wizard" model="ir.actions.act_window">
+        <field name="name">Informe Empleador (GT)</field>
+        <field name="res_model">hr.gt.informe.empleador.wizard</field>
+        <field name="view_mode">form</field>
+        <field name="target">new</field>
+    </record>
+
+    <!-- Ajusta parent al menú donde lo quieras colocar -->
+    <menuitem id="menu_hr_gt_informe_empleador"
+              name="Informe Empleador (GT)"
+              parent="hr_payroll.menu_hr_payroll_report"
+              action="action_hr_gt_informe_empleador_wizard"/>
+</odoo>

@@ -23,7 +23,7 @@
             menu="False"
         />
 
-        <!-- <report
+        <report
             id="action_igss"
             string="IGSS"
             model="hr.payslip.run"
@@ -31,7 +31,7 @@
             file="hr_gt.igss"
             name="hr_gt.igss"
             menu="False"
-        /> -->
+        />
 
 
         <record id="view_hr_gt_planilla_wizard" model="ir.ui.view">
@@ -63,7 +63,7 @@
               </field>
         </record>
 
-        <!-- <record id="view_hr_gt_igss_wizard" model="ir.ui.view">
+        <record id="view_hr_gt_igss_wizard" model="ir.ui.view">
               <field name="name">IGSS</field>
               <field name="model">hr_gt.igss.wizard</field>
               <field name="arch" type="xml">
@@ -84,7 +84,7 @@
                     </footer>
                 </form>
               </field>
-        </record> -->
+        </record>
 
         <record id="view_hr_gt_recibo_pago_wizard" model="ir.ui.view">
               <field name="name">Recibo</field>
@@ -150,12 +150,24 @@
                 view_mode="form" target="new"/> -->
 
             <!-- <menuitem action="hr_gt_action_planilla" id="menu_planilla" parent="hr_payroll.menu_hr_payroll_root"/> -->
-            <!-- <menuitem action="hr_gt_action_igss" id="menu_igss" parent="hr_payroll.menu_hr_payroll_root"/> -->
+
+            <!-- <record id="hr_gt_action_igss" model="ir.actions.act_window">
+                <field name="name">IGSS (GT)</field>
+                <field name="res_model">hr_gt.igss.wizard</field>
+                <field name="view_mode">form</field>
+                <field name="binding_model">hr.payslip.run</field>
+                <field name="target">new</field>
+            </record> -->
+            <act_window id="hr_gt_action_igss"
+                name="IGSS"
+                target="new"
+                binding_model="hr.payslip.run"
+                res_model="hr_gt.igss.wizard"
+                view_mode="form"/>
+            <menuitem action="hr_gt_action_igss" id="menu_igss" parent="hr_payroll.menu_hr_payroll_root"/>
 
             <!-- <menuitem action="hr_gt_action_recibo_pago" id="menu_recibo_pago" parent="hr_payroll.menu_hr_payroll_root"/> -->
             
-
-
 
 
     </data>

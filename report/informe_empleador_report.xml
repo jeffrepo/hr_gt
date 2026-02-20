@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <!-- Reporte XLSX -->
+    <report
+        id="action_informe_empleador_xlsx_from_wizard"
+        model="hr.gt.informe.empleador.wizard"
+        string="Informe Empleador (XLSX)"
+        report_type="xlsx"
+        name="hr_gt.informe_empleador_xlsx"
+        file="Informe_Empleador"
+        attachment_use="False"
+    />
+</odoo>
