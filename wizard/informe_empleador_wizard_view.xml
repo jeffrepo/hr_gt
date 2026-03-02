@@ -14,7 +14,7 @@
                 <button string="Cerrar" special="cancel" class="btn-secondary"/>
               </footer>
             
-              <group attrs="{'invisible': [('file_data', '=', False)]}">
+              <group invisible="file_data == False">
                 <field name="file_name" readonly="1"/>
                 <field name="file_data" filename="file_name" readonly="1"/>
               </group>

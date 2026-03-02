@@ -7,6 +7,12 @@
             <field name="model">hr.employee</field>
             <field name="inherit_id" ref="hr.view_employee_form"/>
             <field name="arch" type="xml">
+                <field name="employee_type" position="before">
+                    <label for="bonificacion_incentivo"/>
+                    <div class="o_row" name="bonificacion_incentivo">
+                        <field name="bonificacion_incentivo" class="oe_inline o_hr_narrow_field" nolabel="1"/>
+                    </div>
+                </field>
                 <notebook position="inside">
                     <page string="Datos requeridos">
                         <group string="IGSS E INFORMES">
@@ -24,7 +30,7 @@
                             <field name="municipio_nacimiento_id"/>
                             <field name="lugar_nacimiento"/>
                             <field name="tipo_discapacidad"/>
-                            <field name="gender"/>
+                            <field name="sex"/>
                             <field name="marital"/>
                             <field name="cantidad_hijos"/>
                             <field name="identification_id"/>
@@ -54,7 +60,7 @@
                         </group>
                     </page>
                 </notebook>
-                <field name="bank_account_id" position="after">
+                <field name="bank_account_ids" position="after">
                     <field name="deposito"/>
                 </field>
             </field>
@@ -88,21 +94,21 @@
             <field name="name">hr_gt.otra_entrada.tree</field>
             <field name="model">hr_gt.otra_entrada</field>
             <field name="arch" type="xml">
-                <tree string="Otra entrada">
+                <list string="Otra entrada">
                     <field name="name"/>
                     <field name="tipo"/>
                     <field name="empleado_id"/>
                     <field name="mes"/>
                     <field name="anio"/>
                     <field name="monto"/>
-                </tree>
+                </list>
             </field>
         </record>
 
         <record id="action_hr_otra_entrada" model="ir.actions.act_window">
             <field name="name">Otra entrada</field>
             <field name="res_model">hr_gt.otra_entrada</field>
-            <field name="view_mode">tree,form</field>
+            <field name="view_mode">list,form</field>
             <field name="help" type="html">
               <p class="oe_view_nocontent_create">
               </p>
@@ -113,7 +119,7 @@
             id="hr_menu_otra_entrada"
             name="Otras entradas"
             action="action_hr_otra_entrada"
-            parent="hr_work_entry_contract_enterprise.menu_hr_payroll_root"
+            parent="hr_work_entry_enterprise.menu_hr_payroll_root"
             sequence="50"
             groups="hr.group_hr_manager"/>
 

@@ -1,22 +1,19 @@
 # -*- coding: utf-8 -*-
 
 from odoo import models, fields, api
-from odoo.release import version_info
 import logging
 import datetime
 import time
 import dateutil.parser
-from dateutil.relativedelta import relativedelta
-from dateutil import relativedelta as rdelta
 from odoo.fields import Date, Datetime
 import calendar
 
-class HrPayslipEmployees(models.TransientModel):
-    _inherit = 'hr.payslip.employees'
+# class HrPayslipEmployees(models.TransientModel):
+#     _inherit = 'hr.payslip.employees'
 
-    def _get_employees(self):
-        res = super(HrPayslipEmployees, self)._get_employees()
-        return False
+#     def _get_employees(self):
+#         res = super(HrPayslipEmployees, self)._get_employees()
+#         return False
 
 class HrPayslip(models.Model):
     _inherit = 'hr.payslip'
@@ -32,7 +29,7 @@ class HrPayslip(models.Model):
                 existe_entrada = True
         return existe_entrada
 
-    @api.depends('employee_id', 'contract_id', 'struct_id', 'date_from', 'date_to', 'struct_id')
+    @api.depends('employee_id', 'version_id', 'struct_id', 'date_from', 'date_to', 'struct_id')
     def _compute_input_line_ids(self):
         res = super(HrPayslip, self)._compute_input_line_ids()
         for slip in self:           

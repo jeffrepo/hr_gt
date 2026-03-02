@@ -4,7 +4,7 @@ from odoo import models, fields, api
 import logging
 
 class Contract(models.Model):
-    _inherit = "hr.contract"
+    _inherit = "hr.version"
 
     bonificacion_incentivo = fields.Monetary('Bonificiación incentivo', digits=(16,2), track_visibility='onchange')
     hora_extra = fields.Float('Hora extra')

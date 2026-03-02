@@ -178,4 +178,4 @@ class hr_historial_salario(models.Model):
     fecha = fields.Date('Fecha')
     salario = fields.Float('Salario')
     nomina_id = fields.Many2one('hr.payslip','Nomina')
-    contrato_id = fields.Many2one('hr.contract','Contato')
+    contrato_id = fields.Many2one('hr.version','Contato')
