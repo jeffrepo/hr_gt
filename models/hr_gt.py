@@ -11,10 +11,33 @@ import calendar
 
 class hr_gt_recibo_pago(models.Model):
     _name = 'hr_gt.recibo_pago'
+     _description = "Recibo de pago"
 
     name = fields.Char('Nombre planilla')
     ingreso_ids = fields.Many2many("hr.salary.rule", "ingreo_ids_rel", string="Ingresos")
+    ingreso_regla_ids = fields.One2many("hr_gt.ingreso", "recibo_id", string="Ingreso")
+    deduccion_regla_ids = fields.One2many("hr_gt.deduccion", "recibo_id", string="Deduccion")
     deduccion_ids = fields.Many2many("hr.salary.rule", "deduccion_ids_rel", string="Deducciones")
+
+class hr_gt_ingreso(models.Model):
+    _name = 'hr_gt.ingreso'
+    _rec_name = "regla_id"
+    _description = "Reglas para ingresos"
+    _order = 'sequence'
+
+    sequence = fields.Integer(string='Sequence', default=10)
+    recibo_id = fields.Many2one("hr_gt.recibo_pago", string="Recibo")
+    regla_id = fields.Many2one("hr.salary.rule", string="regla")
+
+class hr_gt_deduccion(models.Model):
+    _name = 'hr_gt.deduccion'
+    _rec_name = "regla_id"
+    _description = "Reglas para deducciones"
+    _order = 'sequence'
+
+    sequence = fields.Integer(string='Sequence', default=10)
+    recibo_id = fields.Many2one("hr_gt.recibo_pago", string="Recibo")
+    regla_id = fields.Many2one("hr.salary.rule", string="regla")
 
 class hr_gt_formato_planilla(models.Model):
     _name = 'hr_gt.formato_planilla'
