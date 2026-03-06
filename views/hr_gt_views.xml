@@ -3,26 +3,36 @@
     <data>
 
 
-        <record id="view_hr_gt_recibo_pago_form" model="ir.ui.view">
-            <field name="name">hr_gt.recibo_pago.form</field>
-            <field name="model">hr_gt.recibo_pago</field>
-            <field name="arch" type="xml">
-                <form string="Planilla">
-                    <sheet>
-                        <group>
-                            <field name="name"/>
-                        </group>
-                        <notebook>
-                            <page string="Reglas">
-                                <field name="ingreso_ids"/>
-                                <field name="deduccion_ids"/>
-                            </page>
-                        </notebook>
-                    </sheet>
-                </form>
-            </field>
-        </record>
-        
+      <record id="view_hr_gt_recibo_pago_form" model="ir.ui.view">
+          <field name="name">hr_gt.recibo_pago.form</field>
+          <field name="model">hr_gt.recibo_pago</field>
+          <field name="arch" type="xml">
+              <form string="Planilla">
+                  <sheet>
+                      <group>
+                          <field name="name"/>
+                      </group>
+                      <notebook>
+                          <page string="Reglas">
+                              <field name="ingreso_regla_ids">
+                                  <tree string="Ingresos" editable="bottom">
+                                      <field name="sequence" widget="handle"/>
+                                      <field name="regla_id"/>
+                                  </tree>
+                              </field>
+                              <field name="deduccion_regla_ids">
+                                  <tree string="Deducciones" editable="bottom">
+                                      <field name="sequence" widget="handle"/>
+                                      <field name="regla_id"/>
+                                  </tree>
+                              </field>
+                          </page>
+                      </notebook>
+                  </sheet>
+              </form>
+          </field>
+      </record>
+
         <record id="view_hr_gt_formato_planilla_form" model="ir.ui.view">
             <field name="name">hr_gt.formato_planilla.form</field>
             <field name="model">hr_gt.formato_planilla</field>
@@ -36,7 +46,7 @@
                         <notebook>
                             <page string="Reglas">
                                  <field name="regla_ids"/>
-                            </page>    
+                            </page>
                             <page string="Ingresos">
                                 <label for="ingreso_ids" string="Ingresos"/>
                                 <field name="ingreso_ids">
@@ -70,7 +80,7 @@
                 </tree>
             </field>
         </record>
-        
+
 
         <record id="view_hr_gt_formato_planilla_tree" model="ir.ui.view">
             <field name="name">hr_gt.formato_planilla.tree</field>
@@ -91,7 +101,7 @@
               </p>
             </field>
         </record>
-        
+
 
         <record id="action_hr_gt_formato_planilla" model="ir.actions.act_window">
             <field name="name">Formato de planilla</field>
@@ -109,7 +119,7 @@
             action="action_hr_gt_recibo_pago"
             parent="hr_work_entry_contract_enterprise.menu_hr_work_entry_configuration"
             sequence="110"/>
-        
+
 
         <menuitem
             id="hr_gt_menu_planilla"

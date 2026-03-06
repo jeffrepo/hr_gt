@@ -91,32 +91,32 @@ class ReportReciboPago(models.AbstractModel):
                             dic['dias_trabajados'] = dias.number_of_days
 
 
-                if recibo_pago_id.ingreso_ids:
-                    for ingreso in recibo_pago_id.ingreso_ids:
-                        if ingreso.id not in dic['ingresos']:
-                            dic['ingresos'][ingreso.id] = {'nombre': ingreso.name, 'total': 0}
+                if recibo_pago_id.ingreso_regla_ids:
+                    for ingreso in recibo_pago_id.ingreso_regla_ids:
+                        if ingreso.regla_id.id not in dic['ingresos']:
+                            dic['ingresos'][ingreso.regla_id.id] = {'nombre': ingreso.name, 'total': 0}
 
                         if planilla.line_ids:
                             for linea in planilla.line_ids:
-                                if linea.salary_rule_id.id == ingreso.id:
-                                    dic['ingresos'][ingreso.id]['total'] += linea.total
+                                if linea.salary_rule_id.id == ingreso.regla_id.id:
+                                    dic['ingresos'][ingreso.regla_id.id]['total'] += linea.total
                                     dic['total_ingresos'] += linea.total
                                     dic['liquido_recibir'] += linea.total
 
-                if recibo_pago_id.deduccion_ids:
-                    for deduccion in recibo_pago_id.deduccion_ids:
-                        if deduccion.id not in dic['deducciones']:
-                            dic['deducciones'][deduccion.id] = {'nombre': deduccion.name, 'total': 0}
+                if recibo_pago_id.deduccion_regla_ids:
+                    for deduccion in recibo_pago_id.deduccion_regla_ids:
+                        if deduccion.regla_id.id not in dic['deducciones']:
+                            dic['deducciones'][deduccion.regla_id.id] = {'nombre': deduccion.name, 'total': 0}
 
                         if planilla.line_ids:
                             for linea in planilla.line_ids:
-                                if linea.salary_rule_id.id == deduccion.id:
+                                if linea.salary_rule_id.id == deduccion.regla_id.id:
                                     if linea.total < 0:
-                                        dic['deducciones'][deduccion.id]['total'] += (linea.total *-1)
+                                        dic['deducciones'][deduccion.regla_id.id]['total'] += (linea.total *-1)
                                         dic['total_deducciones'] += (linea.total*-1)
                                         dic['liquido_recibir'] += (linea.total)
                                     else:
-                                        dic['deducciones'][deduccion.id]['total'] += (linea.total)
+                                        dic['deducciones'][deduccion.regla_id.id]['total'] += (linea.total)
                                         dic['total_deducciones'] += (linea.total)
                                         dic['liquido_recibir'] += (linea.total)
 
@@ -168,9 +168,9 @@ class ReportReciboPago(models.AbstractModel):
                     'liquido_recibir': 0
                 }
 
-                if recibo_pago_id.ingreso_ids:
-                    for ingreso in recibo_pago_id.ingreso_ids:
-                        if ingreso.id not in dic['ingresos']:
+                if recibo_pago_id.ingreso_regla_ids:
+                    for ingreso in recibo_pago_id.ingreso_regla_ids:
+                        if ingreso.regla_id.id not in dic['ingresos']:
                             dic['ingresos'][ingreso.id] = {'nombre': ingreso.nombre, 'total': 0}
 
                         if planilla.line_ids:
@@ -181,8 +181,8 @@ class ReportReciboPago(models.AbstractModel):
                                     dic['liquido_recibir'] += linea.total
 
                 if recibo_pago_id.deduccion_ids:
-                    for deduccion in recibo_pago_id.deduccion_ids:
-                        if deduccion.id not in dic['deducciones']:
+                    for deduccion in recibo_pago_id.deduccion_regla_ids:
+                        if deduccion.regla_id.id not in dic['deducciones']:
                             dic['deducciones'][deduccion.id] = {'nombre': deduccion.nombre, 'total': 0}
 
                         if planilla.line_ids:
@@ -197,10 +197,6 @@ class ReportReciboPago(models.AbstractModel):
                                         dic['total_deducciones'] += (linea.total)
                                         dic['liquido_recibir'] += (linea.total)
                 recibos_lista.append(dic)
-            # for s in sorted(ordenado):
-            #     for r in recibos_lista:
-            #         if s == r['sequence']:
-            #             lista_ordenada.append(r)
 
 
         if nomina_id.aguinaldo == True:
