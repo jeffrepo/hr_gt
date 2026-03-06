@@ -11,7 +11,6 @@ import calendar
 
 class hr_gt_recibo_pago(models.Model):
     _name = 'hr_gt.recibo_pago'
-     _description = "Recibo de pago"
 
     name = fields.Char('Nombre planilla')
     ingreso_ids = fields.Many2many("hr.salary.rule", "ingreo_ids_rel", string="Ingresos")
