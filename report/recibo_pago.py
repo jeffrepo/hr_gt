@@ -94,7 +94,7 @@ class ReportReciboPago(models.AbstractModel):
                 if recibo_pago_id.ingreso_regla_ids:
                     for ingreso in recibo_pago_id.ingreso_regla_ids:
                         if ingreso.regla_id.id not in dic['ingresos']:
-                            dic['ingresos'][ingreso.regla_id.id] = {'nombre': ingreso.name, 'total': 0}
+                            dic['ingresos'][ingreso.regla_id.id] = {'nombre': ingreso.regla_id.name, 'total': 0}
 
                         if planilla.line_ids:
                             for linea in planilla.line_ids:
@@ -106,7 +106,7 @@ class ReportReciboPago(models.AbstractModel):
                 if recibo_pago_id.deduccion_regla_ids:
                     for deduccion in recibo_pago_id.deduccion_regla_ids:
                         if deduccion.regla_id.id not in dic['deducciones']:
-                            dic['deducciones'][deduccion.regla_id.id] = {'nombre': deduccion.name, 'total': 0}
+                            dic['deducciones'][deduccion.regla_id.id] = {'nombre': deduccion.regla_id.name, 'total': 0}
 
                         if planilla.line_ids:
                             for linea in planilla.line_ids:
@@ -171,7 +171,7 @@ class ReportReciboPago(models.AbstractModel):
                 if recibo_pago_id.ingreso_regla_ids:
                     for ingreso in recibo_pago_id.ingreso_regla_ids:
                         if ingreso.regla_id.id not in dic['ingresos']:
-                            dic['ingresos'][ingreso.id] = {'nombre': ingreso.nombre, 'total': 0}
+                            dic['ingresos'][ingreso.id] = {'nombre': ingreso.regla_id.nombre, 'total': 0}
 
                         if planilla.line_ids:
                             for linea in planilla.line_ids:
@@ -183,7 +183,7 @@ class ReportReciboPago(models.AbstractModel):
                 if recibo_pago_id.deduccion_ids:
                     for deduccion in recibo_pago_id.deduccion_regla_ids:
                         if deduccion.regla_id.id not in dic['deducciones']:
-                            dic['deducciones'][deduccion.id] = {'nombre': deduccion.nombre, 'total': 0}
+                            dic['deducciones'][deduccion.id] = {'nombre': deduccion.regla_id.nombre, 'total': 0}
 
                         if planilla.line_ids:
                             for linea in planilla.line_ids:
