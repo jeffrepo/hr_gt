@@ -13,7 +13,7 @@
     'depends': ['hr','hr_payroll','hr_work_entry_enterprise'],
     'data': [
         'views/hr_views.xml',
-        'views/report.xml',
+        #'views/report.xml',
         'views/hr_gt_views.xml',
         'data/data.xml',
         'views/recibo_pago.xml',
