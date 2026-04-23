@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <record id="hr_gt_hr_employee_form_inherit" model="ir.ui.view">
+        <field name="name">hr_gt.hr.employee.form.inherit</field>
+        <field name="model">hr.employee</field>
+        <field name="inherit_id" ref="hr_payroll.payroll_hr_employee_view_form"/>
+        <field name="arch" type="xml">
+            <xpath expr="//group[@name='payroll_group']" position="inside">
+                <group string="Datos Guatemala">
+                    <field name="bonificacion_incentivo"/>
+                    <field name="no_igss"/>
+                    <field name="jubilado"/>
+                    <field name="isr"/>
+                </group>
+            </xpath>
+        </field>
+    </record>
+</odoo>
