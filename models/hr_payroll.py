@@ -32,7 +32,7 @@ class HrPayslip(models.Model):
     @api.depends('employee_id', 'version_id', 'struct_id', 'date_from', 'date_to', 'struct_id')
     def _compute_input_line_ids(self):
         res = super(HrPayslip, self)._compute_input_line_ids()
-        for slip in self:           
+        for slip in self:
             if slip.employee_id and slip.struct_id and slip.struct_id.input_line_type_ids:
                 mes_nomina = slip.date_from.month
                 anio_nomina = slip.date_from.year
@@ -41,10 +41,10 @@ class HrPayslip(models.Model):
                 bonificaciones = {}
                 descuento_ids = self.env["hr_gt.otra_entrada"].search([("tipo",'=','descuento'),("mes",'=',mes_nomina), ("anio","=",anio_nomina), ("empleado_id","=", slip.employee_id.id)])
                 bonificacion_ids = self.env["hr_gt.otra_entrada"].search([("tipo",'=','bonificacion'), ("anio","=",anio_nomina),("mes",'=',mes_nomina) ,("empleado_id","=", slip.employee_id.id)])
-                
+
                 logging.warning(descuento_ids)
                 logging.warning(bonificacion_ids)
-                
+
                 if descuento_ids:
                     for descuento in descuento_ids:
                         if descuento.codigo not in descuentos:
@@ -56,7 +56,7 @@ class HrPayslip(models.Model):
                         if bonifcacion.codigo not in bonificaciones:
                             bonificaciones[bonifcacion.codigo] = 0
                         bonificaciones[bonifcacion.codigo] += bonifcacion.monto
-                
+
                 input_line_vals = []
                 if slip.input_line_ids:
                     slip.input_line_ids.unlink()
@@ -65,10 +65,10 @@ class HrPayslip(models.Model):
                     monto = 0
                     if line.code in bonificaciones:
                         monto = bonificaciones[line.code]
-                        
+
                     if line.code in descuentos:
                         monto = descuentos[line.code]
-                        
+
                     input_line_vals.append((0,0,{
                         'name': line.name,
                         'amount': monto,
@@ -76,12 +76,12 @@ class HrPayslip(models.Model):
                     }))
                 slip.update({'input_line_ids': input_line_vals})
         return res
-    
+
     def compute_sheet(self):
         for nomina in self:
             reference_calendar = nomina._get_out_of_contract_calendar()
             dias_de_quincena = reference_calendar.get_work_duration_data(Datetime.from_string(nomina.date_from), Datetime.from_string(nomina.date_to), compute_leaves=False,domain = False)
-            nomina.dias_nomina = dias_de_quincena['days'] + 1
+            nomina.dias_nomina = dias_de_quincena['days']
             logging.warning(nomina.date_to.year)
             numero_dias = calendar.monthrange(nomina.date_to.year, nomina.date_to.month)
             logging.warning(numero_dias)
