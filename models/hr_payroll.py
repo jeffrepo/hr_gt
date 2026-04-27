@@ -89,15 +89,6 @@ class HrPayslip(models.Model):
         res =  super(HrPayslip, self).compute_sheet()
         return res
 
-    def unlink(self):
-        for nomina in self:
-            if nomina.contract_id:
-                if nomina.contract_id.historial_salario_ids:
-                    for linea in nomina.contract_id.historial_salario_ids:
-                        if linea.nomina_id.id == nomina.id:
-                            linea.unlink()
-        res = super(HrPayslip, self).unlink()
-        return res
 
     def _obtener_entrada(self,contrato_id):
         entradas = False
