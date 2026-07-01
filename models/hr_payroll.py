@@ -22,6 +22,85 @@ class HrPayslip(models.Model):
     dias_nomina = fields.Integer('Días de nomina')
     dia_mes = fields.Integer('Dias del mes')
 
+    def _get_otra_entrada_periodo_gt(self):
+        """
+        Devuelve mes y año tomando como base la fecha final de la nómina.
+        """
+        self.ensure_one()
+
+        fecha_base = self.date_to or self.date_from or fields.Date.context_today(self)
+
+        return str(fecha_base.month), fecha_base.year
+
+    def _sync_otras_entradas_gt_to_inputs(self):
+        """
+        Llena las entradas salariales del payslip usando el modelo hr_gt.otra_entrada.
+
+        Relación:
+            hr_gt.otra_entrada.codigo = hr.payslip.input.input_type_id.code
+            hr_gt.otra_entrada.monto  = hr.payslip.input.amount
+        """
+        OtraEntrada = self.env['hr_gt.otra_entrada']
+
+        for payslip in self:
+            if not payslip.employee_id:
+                continue
+
+            mes, anio = payslip._get_otra_entrada_periodo_gt()
+
+            otras_entradas = OtraEntrada.search([
+                ('empleado_id', '=', payslip.employee_id.id),
+                ('mes', '=', mes),
+                ('anio', '=', anio),
+                ('company_id', '=', payslip.company_id.id),
+            ])
+
+            if not otras_entradas:
+                continue
+
+            # Agrupamos por código por si hay más de una entrada con el mismo código
+            montos_por_codigo = {}
+
+            for entrada in otras_entradas:
+                if not entrada.codigo:
+                    continue
+
+                codigo = entrada.codigo.strip()
+
+                if codigo not in montos_por_codigo:
+                    montos_por_codigo[codigo] = 0.0
+
+                monto = entrada.monto or 0.0
+
+                # Si quieres que los descuentos se guarden negativos, deja esto activo.
+                # Si prefieres manejarlos positivos y restarlos desde la regla salarial,
+                # comenta este bloque.
+                montos_por_codigo[codigo] += monto
+
+            for codigo, monto in montos_por_codigo.items():
+                input_line = payslip.input_line_ids.filtered(
+                    lambda line: line.input_type_id and line.input_type_id.code == codigo
+                )
+
+                if input_line:
+                    input_line.write({
+                        'amount': monto,
+                    })
+                else:
+                    input_type = self.env['hr.payslip.input.type'].search([
+                        ('code', '=', codigo),
+                    ], limit=1)
+
+                    if input_type:
+                        self.env['hr.payslip.input'].create({
+                            'payslip_id': payslip.id,
+                            'input_type_id': input_type.id,
+                            'name': input_type.name,
+                            'amount': monto,
+                        })
+
+        return True
+    
     def existe_entrada(self,entrada_ids,entrada_id):
         existe_entrada = False
         for entrada in entrada_ids:
@@ -78,6 +157,7 @@ class HrPayslip(models.Model):
         return res
 
     def compute_sheet(self):
+        self._sync_otras_entradas_gt_to_inputs()
         for nomina in self:
             reference_calendar = nomina._get_out_of_contract_calendar()
             dias_de_quincena = reference_calendar.get_work_duration_data(Datetime.from_string(nomina.date_from), Datetime.from_string(nomina.date_to), compute_leaves=False,domain = False)
