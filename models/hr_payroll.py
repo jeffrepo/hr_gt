@@ -165,7 +165,7 @@ class HrPayslip(models.Model):
             logging.warning(nomina.date_to.year)
             numero_dias = calendar.monthrange(nomina.date_to.year, nomina.date_to.month)
             logging.warning(numero_dias)
-            nomina.dia_mes = numero_dias[1] - 1
+            nomina.dia_mes = numero_dias[1]
         res =  super(HrPayslip, self).compute_sheet()
         return res
 
