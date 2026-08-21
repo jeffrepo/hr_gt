@@ -290,11 +290,11 @@ class HrPayslipRun(models.Model):
 
     def action_payroll_hr_version_list_view_payrun(
         self,
-        date_start=False,
-        date_end=False,
-        structure_id=False,
-        company_id=False,
-        schedule_pay=False,
+        date_start=None,
+        date_end=None,
+        structure_id=None,
+        company_id=None,
+        schedule_pay=None,
     ):
         action = super().action_payroll_hr_version_list_view_payrun(
             date_start,
@@ -305,7 +305,6 @@ class HrPayslipRun(models.Model):
         )
 
         payrun = self[:1]
-
         date_start = fields.Date.to_date(
             date_start or payrun.date_start
         )
@@ -314,6 +313,7 @@ class HrPayslipRun(models.Model):
         )
         structure_id = structure_id or payrun.structure_id.id
         company_id = company_id or payrun.company_id.id
+        schedule_pay = schedule_pay or payrun.schedule_pay
 
         if (
             not date_start
@@ -325,45 +325,112 @@ class HrPayslipRun(models.Model):
             return action
 
         month_start = date_start.replace(day=1)
-        structure = self.env["hr.payroll.structure"].browse(structure_id)
 
-        domain = [
+        previous_payslip_domain = [
             ("company_id", "=", company_id),
+            ("date_from", ">=", month_start),
+            ("date_to", "<", date_start),
+            ("state", "!=", "cancel"),
+        ]
+
+        if structure_id:
+            previous_payslip_domain.append(
+                ("struct_id", "=", structure_id)
+            )
+
+        if schedule_pay:
+            previous_payslip_domain.append(
+                ("version_id.schedule_pay", "=", schedule_pay)
+            )
+
+        previous_employee_ids = (
+            self.env["hr.payslip"]
+            .search(previous_payslip_domain)
+            .employee_id.ids
+        )
+
+        if not previous_employee_ids:
+            return action
+
+        structure = self.env["hr.payroll.structure"].browse(
+            structure_id
+        )
+
+        version_domain = [
+            ("company_id", "=", company_id),
+            ("employee_id", "in", previous_employee_ids),
+            ("employee_id", "!=", False),
             ("contract_date_start", "<=", date_start),
             ("contract_date_end", ">=", month_start),
             ("contract_date_end", "<", date_start),
+            ("date_version", "<=", date_start),
         ]
 
         if structure.type_id:
-            domain.append(
+            version_domain.append(
                 ("structure_type_id", "=", structure.type_id.id)
             )
 
-        versions = (
-            self.env["hr.version"]
-            .with_context(active_test=False)
-            .search(domain, order="employee_id, date_version desc")
+        if schedule_pay:
+            version_domain.append(
+                ("schedule_pay", "=", schedule_pay)
+            )
+
+        candidate_versions = self.env["hr.version"].search(
+            version_domain,
+            order="employee_id, date_version desc",
         )
 
+        current_payslip_domain = [
+            ("company_id", "=", company_id),
+            ("employee_id", "in", candidate_versions.employee_id.ids),
+            ("date_from", "=", date_start),
+            ("date_to", "=", date_end),
+            ("state", "!=", "cancel"),
+        ]
+
+        if structure_id:
+            current_payslip_domain.append(
+                ("struct_id", "=", structure_id)
+            )
+
+        if schedule_pay:
+            current_payslip_domain.append(
+                ("version_id.schedule_pay", "=", schedule_pay)
+            )
+
         existing_employee_ids = set(
-            payrun.version_ids.employee_id.ids
-        ) if payrun else set()
+            self.env["hr.payslip"]
+            .search(current_payslip_domain)
+            .employee_id.ids
+        )
 
         extra_version_ids = []
         processed_employee_ids = set(existing_employee_ids)
 
-        for version in versions:
+        for version in candidate_versions:
             employee_id = version.employee_id.id
             if employee_id not in processed_employee_ids:
                 extra_version_ids.append(version.id)
                 processed_employee_ids.add(employee_id)
 
-        if extra_version_ids:
-            base_domain = list(action.get("domain") or [])
-            action["domain"] = (
-                ["|", ("id", "in", extra_version_ids)] + base_domain
-                if base_domain
-                else [("id", "in", extra_version_ids)]
+        base_version_ids = set()
+
+        for condition in action.get("domain", []):
+            if (
+                isinstance(condition, (list, tuple))
+                and len(condition) == 3
+                and condition[0] == "id"
+                and condition[1] == "in"
+            ):
+                base_version_ids.update(condition[2])
+
+        action["domain"] = [
+            (
+                "id",
+                "in",
+                list(base_version_ids | set(extra_version_ids)),
             )
+        ]
 
         return action
