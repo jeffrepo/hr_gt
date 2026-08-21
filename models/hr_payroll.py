@@ -7,6 +7,9 @@ import time
 import dateutil.parser
 from odoo.fields import Date, Datetime
 import calendar
+from collections import defaultdict
+from odoo.fields import Domain
+
 
 # class HrPayslipEmployees(models.TransientModel):
 #     _inherit = 'hr.payslip.employees'
@@ -288,149 +291,118 @@ class HrPayslipRun(models.Model):
 class HrPayslipRun(models.Model):
     _inherit = "hr.payslip.run"
 
-    def action_payroll_hr_version_list_view_payrun(
+    def _get_valid_version_ids(
         self,
         date_start=None,
         date_end=None,
         structure_id=None,
         company_id=None,
+        employee_ids=None,
         schedule_pay=None,
     ):
-        action = super().action_payroll_hr_version_list_view_payrun(
-            date_start,
-            date_end,
-            structure_id,
-            company_id,
-            schedule_pay,
+        date_start = fields.Date.to_date(date_start or self.date_start)
+        date_end = fields.Date.to_date(date_end or self.date_end)
+
+        structure = (
+            self.env["hr.payroll.structure"].browse(structure_id)
+            if structure_id
+            else self.structure_id
+        )
+        schedule_pay = schedule_pay or self.schedule_pay
+        company_id = company_id or self.company_id.id
+
+        is_second_fortnight = (
+            date_start
+            and date_end
+            and date_start.day >= 16
+            and date_start.year == date_end.year
+            and date_start.month == date_end.month
         )
 
-        payrun = self[:1]
-        date_start = fields.Date.to_date(
-            date_start or payrun.date_start
+        contract_search_start = (
+            date_start.replace(day=1)
+            if is_second_fortnight
+            else date_start
         )
-        date_end = fields.Date.to_date(
-            date_end or payrun.date_end
-        )
-        structure_id = structure_id or payrun.structure_id.id
-        company_id = company_id or payrun.company_id.id
-        schedule_pay = schedule_pay or payrun.schedule_pay
 
-        if (
-            not date_start
-            or not date_end
-            or date_start.day < 16
-            or date_start.year != date_end.year
-            or date_start.month != date_end.month
-        ):
-            return action
-
-        month_start = date_start.replace(day=1)
-
-        previous_payslip_domain = [
+        version_domain = Domain([
             ("company_id", "=", company_id),
-            ("date_from", ">=", month_start),
-            ("date_to", "<", date_start),
-            ("state", "!=", "cancel"),
-        ]
-
-        if structure_id:
-            previous_payslip_domain.append(
-                ("struct_id", "=", structure_id)
-            )
-
-        if schedule_pay:
-            previous_payslip_domain.append(
-                ("version_id.schedule_pay", "=", schedule_pay)
-            )
-
-        previous_employee_ids = (
-            self.env["hr.payslip"]
-            .search(previous_payslip_domain)
-            .employee_id.ids
-        )
-
-        if not previous_employee_ids:
-            return action
-
-        structure = self.env["hr.payroll.structure"].browse(
-            structure_id
-        )
-
-        version_domain = [
-            ("company_id", "=", company_id),
-            ("employee_id", "in", previous_employee_ids),
             ("employee_id", "!=", False),
-            ("contract_date_start", "<=", date_start),
-            ("contract_date_end", ">=", month_start),
-            ("contract_date_end", "<", date_start),
-            ("date_version", "<=", date_start),
-        ]
+            ("contract_date_start", "<=", date_end),
+            "|",
+                ("contract_date_end", "=", False),
+                ("contract_date_end", ">=", contract_search_start),
+            ("date_version", "<=", date_end),
+            ("structure_type_id", "!=", False),
+        ])
 
-        if structure.type_id:
-            version_domain.append(
-                ("structure_type_id", "=", structure.type_id.id)
-            )
+        # En la segunda quincena también se incluyen empleados archivados
+        # que finalizaron contrato durante la primera quincena.
+        if not is_second_fortnight:
+            version_domain &= Domain([
+                ("active_employee", "=", True),
+            ])
 
-        if schedule_pay:
-            version_domain.append(
-                ("schedule_pay", "=", schedule_pay)
-            )
+        if structure:
+            version_domain &= Domain([
+                ("structure_type_id", "=", structure.type_id.id),
+            ])
 
-        candidate_versions = self.env["hr.version"].search(
-            version_domain,
-            order="employee_id, date_version desc",
-        )
-
-        current_payslip_domain = [
-            ("company_id", "=", company_id),
-            ("employee_id", "in", candidate_versions.employee_id.ids),
-            ("date_from", "=", date_start),
-            ("date_to", "=", date_end),
-            ("state", "!=", "cancel"),
-        ]
-
-        if structure_id:
-            current_payslip_domain.append(
-                ("struct_id", "=", structure_id)
-            )
+        if employee_ids:
+            version_domain &= Domain([
+                ("employee_id", "in", employee_ids),
+            ])
 
         if schedule_pay:
-            current_payslip_domain.append(
-                ("version_id.schedule_pay", "=", schedule_pay)
-            )
+            version_domain &= Domain([
+                ("schedule_pay", "=", schedule_pay),
+            ])
 
-        existing_employee_ids = set(
-            self.env["hr.payslip"]
-            .search(current_payslip_domain)
-            .employee_id.ids
+        all_versions = self.env["hr.version"]._read_group(
+            domain=version_domain,
+            groupby=["employee_id", "date_version:day"],
+            order="date_version:day DESC",
+            aggregates=["id:recordset"],
         )
 
-        extra_version_ids = []
-        processed_employee_ids = set(existing_employee_ids)
+        versions_by_employee = defaultdict(list)
 
-        for version in candidate_versions:
-            employee_id = version.employee_id.id
-            if employee_id not in processed_employee_ids:
-                extra_version_ids.append(version.id)
-                processed_employee_ids.add(employee_id)
+        for employee, _, versions in all_versions:
+            versions_by_employee[employee] += [*versions]
 
-        base_version_ids = set()
+        valid_versions = self.env["hr.version"]
 
-        for condition in action.get("domain", []):
-            if (
-                isinstance(condition, (list, tuple))
-                and len(condition) == 3
-                and condition[0] == "id"
-                and condition[1] == "in"
-            ):
-                base_version_ids.update(condition[2])
+        for employee_versions in versions_by_employee.values():
+            employee_valid_versions = self.env["hr.version"]
 
-        action["domain"] = [
-            (
-                "id",
-                "in",
-                list(base_version_ids | set(extra_version_ids)),
-            )
-        ]
+            for index, version in enumerate(employee_versions):
+                if (
+                    version.date_version <= date_start
+                    or employee_versions[-1] == version
+                ):
+                    employee_valid_versions |= version
+                    break
 
-        return action
+                if employee_valid_versions:
+                    if (
+                        employee_valid_versions[-1].contract_date_start
+                        > version.contract_date_start
+                        and (
+                            version.contract_date_start
+                            >= version.date_version
+                            or version.contract_date_start
+                            > employee_versions[index + 1].contract_date_start
+                        )
+                    ):
+                        employee_valid_versions |= version
+
+                elif (
+                    version.contract_date_start >= version.date_version
+                    or version.contract_date_start
+                    > employee_versions[index + 1].contract_date_start
+                ):
+                    employee_valid_versions |= version
+
+            valid_versions |= employee_valid_versions
+
+        return valid_versions.ids
