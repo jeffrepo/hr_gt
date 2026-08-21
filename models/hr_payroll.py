@@ -284,3 +284,38 @@ class HrPayslipRun(models.Model):
                     }
                     pago_id = self.env['account.payment'].create(pago)
         return True
+
+class HrPayslipRun(models.Model):
+    _inherit = "hr.payslip.run"
+
+    @api.model
+    def action_payroll_hr_version_list_view_payrun(
+        self,
+        date_start,
+        date_end,
+        structure_id=False,
+        company_id=False,
+        employee_type_ids=None,
+    ):
+        date_start_obj = fields.Date.to_date(date_start)
+        date_end_obj = fields.Date.to_date(date_end)
+
+        # Segunda quincena: incluir contratos que estuvieron vigentes
+        # durante cualquier día del mismo mes.
+        selection_date_start = date_start
+        if (
+            date_start_obj.day >= 16
+            and date_start_obj.year == date_end_obj.year
+            and date_start_obj.month == date_end_obj.month
+        ):
+            selection_date_start = fields.Date.to_string(
+                date_start_obj.replace(day=1)
+            )
+
+        return super().action_payroll_hr_version_list_view_payrun(
+            selection_date_start,
+            date_end,
+            structure_id,
+            company_id,
+            employee_type_ids or [],
+        )
