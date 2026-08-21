@@ -288,34 +288,82 @@ class HrPayslipRun(models.Model):
 class HrPayslipRun(models.Model):
     _inherit = "hr.payslip.run"
 
-    @api.model
     def action_payroll_hr_version_list_view_payrun(
         self,
-        date_start,
-        date_end,
+        date_start=False,
+        date_end=False,
         structure_id=False,
         company_id=False,
-        employee_type_ids=None,
+        schedule_pay=False,
     ):
-        date_start_obj = fields.Date.to_date(date_start)
-        date_end_obj = fields.Date.to_date(date_end)
-
-        # Segunda quincena: incluir contratos que estuvieron vigentes
-        # durante cualquier día del mismo mes.
-        selection_date_start = date_start
-        if (
-            date_start_obj.day >= 16
-            and date_start_obj.year == date_end_obj.year
-            and date_start_obj.month == date_end_obj.month
-        ):
-            selection_date_start = fields.Date.to_string(
-                date_start_obj.replace(day=1)
-            )
-
-        return super().action_payroll_hr_version_list_view_payrun(
-            selection_date_start,
+        action = super().action_payroll_hr_version_list_view_payrun(
+            date_start,
             date_end,
             structure_id,
             company_id,
-            employee_type_ids or [],
+            schedule_pay,
         )
+
+        payrun = self[:1]
+
+        date_start = fields.Date.to_date(
+            date_start or payrun.date_start
+        )
+        date_end = fields.Date.to_date(
+            date_end or payrun.date_end
+        )
+        structure_id = structure_id or payrun.structure_id.id
+        company_id = company_id or payrun.company_id.id
+
+        if (
+            not date_start
+            or not date_end
+            or date_start.day < 16
+            or date_start.year != date_end.year
+            or date_start.month != date_end.month
+        ):
+            return action
+
+        month_start = date_start.replace(day=1)
+        structure = self.env["hr.payroll.structure"].browse(structure_id)
+
+        domain = [
+            ("company_id", "=", company_id),
+            ("contract_date_start", "<=", date_start),
+            ("contract_date_end", ">=", month_start),
+            ("contract_date_end", "<", date_start),
+        ]
+
+        if structure.type_id:
+            domain.append(
+                ("structure_type_id", "=", structure.type_id.id)
+            )
+
+        versions = (
+            self.env["hr.version"]
+            .with_context(active_test=False)
+            .search(domain, order="employee_id, date_version desc")
+        )
+
+        existing_employee_ids = set(
+            payrun.version_ids.employee_id.ids
+        ) if payrun else set()
+
+        extra_version_ids = []
+        processed_employee_ids = set(existing_employee_ids)
+
+        for version in versions:
+            employee_id = version.employee_id.id
+            if employee_id not in processed_employee_ids:
+                extra_version_ids.append(version.id)
+                processed_employee_ids.add(employee_id)
+
+        if extra_version_ids:
+            base_domain = list(action.get("domain") or [])
+            action["domain"] = (
+                ["|", ("id", "in", extra_version_ids)] + base_domain
+                if base_domain
+                else [("id", "in", extra_version_ids)]
+            )
+
+        return action
