@@ -25,6 +25,59 @@ class HrPayslip(models.Model):
     dias_nomina = fields.Integer('Días de nomina')
     dia_mes = fields.Integer('Dias del mes')
 
+    @api.model
+    def _issues_dependencies(self):
+        return super()._issues_dependencies() + [
+            'worked_days_line_ids.work_entry_type_id.code',
+            'worked_days_line_ids.number_of_days',
+        ]
+
+    def _is_full_out_second_fortnight_gt(self):
+        self.ensure_one()
+
+        if not (
+            self.date_from
+            and self.date_to
+            and self.version_id
+            and self.version_id.contract_date_end
+        ):
+            return False
+
+        contract_end = self.version_id.contract_date_end
+        is_second_fortnight = (
+            self.date_from.day >= 16
+            and self.date_from.year == self.date_to.year
+            and self.date_from.month == self.date_to.month
+        )
+        contract_ended_in_first_fortnight = (
+            contract_end < self.date_from
+            and contract_end.year == self.date_from.year
+            and contract_end.month == self.date_from.month
+        )
+        out_days = sum(
+            line.number_of_days
+            for line in self.worked_days_line_ids
+            if (line.work_entry_type_id.code or '').upper() == 'OUT'
+        )
+
+        return bool(
+            is_second_fortnight
+            and contract_ended_in_first_fortnight
+            and out_days > 0
+        )
+
+    def _filter_out_of_versions_payslips(self):
+        invalid_payslips = super()._filter_out_of_versions_payslips()
+        return invalid_payslips.filtered(
+            lambda slip: not slip._is_full_out_second_fortnight_gt()
+        )
+
+    def action_payslip_done(self):
+        # Recalcula los errores para recibos creados antes de actualizar
+        # el módulo y evita conservar el error almacenado del contrato.
+        self._compute_issues()
+        return super().action_payslip_done()
+
     def _get_otra_entrada_periodo_gt(self):
         """
         Devuelve mes y año tomando como base la fecha final de la nómina.
