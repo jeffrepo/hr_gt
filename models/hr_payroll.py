@@ -63,8 +63,8 @@ class HrPayslip(models.Model):
             and (out_worked_days or contract_ended_in_first_fortnight)
         )
 
-    def _filter_out_of_versions_payslips(self):
-        invalid_payslips = super()._filter_out_of_versions_payslips()
+    def _filter_not_in_contract_payslips(self):
+        invalid_payslips = super()._filter_not_in_contract_payslips()
         return invalid_payslips.filtered(
             lambda slip: not slip._is_full_out_second_fortnight_gt()
         )
