@@ -35,35 +35,25 @@ class HrPayslip(models.Model):
     def _is_full_out_second_fortnight_gt(self):
         self.ensure_one()
 
-        if not (
-            self.date_from
-            and self.date_to
-            and self.version_id
-            and self.version_id.contract_date_end
-        ):
+        if not (self.date_from and self.date_to):
             return False
 
-        contract_end = self.version_id.contract_date_end
         is_second_fortnight = (
             self.date_from.day >= 16
             and self.date_from.year == self.date_to.year
             and self.date_from.month == self.date_to.month
         )
-        contract_ended_in_first_fortnight = (
-            contract_end < self.date_from
-            and contract_end.year == self.date_from.year
-            and contract_end.month == self.date_from.month
+        positive_worked_days = self.worked_days_line_ids.filtered(
+            lambda line: line.number_of_days > 0
         )
-        out_days = sum(
-            line.number_of_days
-            for line in self.worked_days_line_ids
-            if (line.work_entry_type_id.code or '').upper() == 'OUT'
+        out_worked_days = positive_worked_days.filtered(
+            lambda line: (line.work_entry_type_id.code or '').upper() == 'OUT'
         )
 
         return bool(
             is_second_fortnight
-            and contract_ended_in_first_fortnight
-            and out_days > 0
+            and positive_worked_days
+            and positive_worked_days == out_worked_days
         )
 
     def _filter_out_of_versions_payslips(self):
