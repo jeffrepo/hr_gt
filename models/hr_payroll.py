@@ -28,6 +28,7 @@ class HrPayslip(models.Model):
     @api.model
     def _issues_dependencies(self):
         return super()._issues_dependencies() + [
+            'employee_id.departure_date',
             'worked_days_line_ids.work_entry_type_id.code',
             'worked_days_line_ids.number_of_days',
         ]
@@ -43,17 +44,23 @@ class HrPayslip(models.Model):
             and self.date_from.year == self.date_to.year
             and self.date_from.month == self.date_to.month
         )
-        positive_worked_days = self.worked_days_line_ids.filtered(
-            lambda line: line.number_of_days > 0
-        )
-        out_worked_days = positive_worked_days.filtered(
+        out_worked_days = self.worked_days_line_ids.filtered(
             lambda line: (line.work_entry_type_id.code or '').upper() == 'OUT'
+        )
+        contract_end = (
+            self.version_id.contract_date_end
+            or self.employee_id.departure_date
+        )
+        contract_ended_in_first_fortnight = bool(
+            contract_end
+            and contract_end < self.date_from
+            and contract_end.year == self.date_from.year
+            and contract_end.month == self.date_from.month
         )
 
         return bool(
             is_second_fortnight
-            and positive_worked_days
-            and positive_worked_days == out_worked_days
+            and (out_worked_days or contract_ended_in_first_fortnight)
         )
 
     def _filter_out_of_versions_payslips(self):
@@ -61,6 +68,21 @@ class HrPayslip(models.Model):
         return invalid_payslips.filtered(
             lambda slip: not slip._is_full_out_second_fortnight_gt()
         )
+
+    def _get_errors_by_slip(self):
+        errors_by_slip = super()._get_errors_by_slip()
+        contract_error = self.env._('No running contract over payslip period')
+
+        for slip in self.filtered(
+            lambda payslip: payslip._is_full_out_second_fortnight_gt()
+        ):
+            errors_by_slip[slip] = [
+                issue
+                for issue in errors_by_slip[slip]
+                if issue.get('message') != contract_error
+            ]
+
+        return errors_by_slip
 
     def action_payslip_done(self):
         # Recalcula los errores para recibos creados antes de actualizar
